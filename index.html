@@ -769,9 +769,9 @@ document.addEventListener("click",e=>{
   else if(a==="rebase"){obAnswers=Object.assign({},S.baseline);obStep=0;obIntro=false;obRetake=true;render();window.scrollTo(0,0)}
   else if(a==="reset"){confirmReset=true;render()}
   else if(a==="reset-no"){confirmReset=false;render()}
-  else if(a==="restore-ob"){const raw=($("#restoreOb").value||"").trim();try{const p=JSON.parse(decodeURIComponent(escape(atob(raw.replace(/^Z1:/,"")))));if(!p||p.v!==1)throw 0;S=Object.assign(blank(),p);save();loadDraft();tab="today";toast("Progress restored");render()}catch(_){toast("That code doesn't look right. Copy the whole thing and try again.")}}
+  else if(a==="restore-ob"){const raw=($("#restoreOb").value||"").trim();try{const p=JSON.parse(decodeURIComponent(escape(atob(cleanCode(raw)))));if(!p||p.v!==1)throw 0;S=Object.assign(blank(),p);save();loadDraft();tab="today";toast("Progress restored");render()}catch(_){toast("That code doesn't look right. Copy the whole thing and try again.")}}
   else if(a==="backup"){const code="Z1:"+btoa(unescape(encodeURIComponent(JSON.stringify(S))));const out=$("#backupOut");out.value=code;out.hidden=false;const sel=()=>{out.focus();out.select();toast("Selected. Copy it from the box.")};try{navigator.clipboard.writeText(code).then(()=>toast("Backup code copied"),sel)}catch(_){sel()}}
-  else if(a==="restore"){const raw=($("#restoreIn").value||"").trim();try{const p=JSON.parse(decodeURIComponent(escape(atob(raw.replace(/^Z1:/,"")))));if(!p||p.v!==1)throw 0;restorePending=p;restoreText=raw;render();const r=$("#restoreIn");if(r)r.value=restoreText}catch(_){toast("That code doesn't look right. Copy the whole thing and try again.")}}
+  else if(a==="restore"){const raw=($("#restoreIn").value||"").trim();try{const p=JSON.parse(decodeURIComponent(escape(atob(cleanCode(raw)))));if(!p||p.v!==1)throw 0;restorePending=p;restoreText=raw;render();const r=$("#restoreIn");if(r)r.value=restoreText}catch(_){toast("That code doesn't look right. Copy the whole thing and try again.")}}
   else if(a==="restore-no"){restorePending=null;render()}
   else if(a==="restore-yes"){S=Object.assign(blank(),restorePending);restorePending=null;save();loadDraft();toast("Restored");tab="today";render()}
   else if(a==="reset-yes"){S=blank();obAnswers={};obStep=0;confirmReset=false;save();render()}
@@ -785,6 +785,7 @@ document.addEventListener("click",e=>{const b=e.target.closest('[data-act="retak
 document.addEventListener("change",e=>{const pc=e.target.closest("[data-plan]");if(pc){S.plan=S.plan||{};if(pc.checked)S.plan[pc.dataset.plan]=Date.now();else delete S.plan[pc.dataset.plan];save();if(pc.checked)toast("+"+XP.plan+" XP");setTimeout(render,350);return}
   const c=e.target.closest("[data-setup]");if(c&&c.checked){S.setup[c.dataset.setup]=Date.now();save();toast("Set up. Future you says thanks.");setTimeout(render,500)}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&ov)closeStuck()});
+function cleanCode(r){r=String(r).replace(/\s+/g,"");const m=r.match(/Z1:([A-Za-z0-9+\/=_-]+)/);r=(m?m[1]:r.replace(/^Z1:/,"")).replace(/[^A-Za-z0-9+\/=_-]/g,"").replace(/-/g,"+").replace(/_/g,"/");while(r.length%4)r+="=";return r}
 function keepNote(){const n=$("#jnote");if(n)jDraft.note=n.value}
 function loadDraft(){const j=S.journal.find(x=>x.date===todayKey());jDraft=j?{energy:j.energy||0,helped:(j.helped||[]).slice(),blocked:(j.blocked||[]).slice(),note:j.note||""}:{energy:0,helped:[],blocked:[],note:""}}
 loadDraft();
