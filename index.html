@@ -494,7 +494,7 @@ function renderOnboarding(){
   const q=QUESTIONS[obStep];const sel=obAnswers[q.id];
   const optHTML=q.opts.map(([v,l])=>{const on=q.multi?(sel||[]).includes(v):sel===v;return '<button class="opt" data-ans="'+v+'" aria-pressed="'+on+'">'+esc(l)+(on?'<svg class="check" viewBox="0 0 24 24" style="fill:none;stroke:var(--sun-ink)" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>':'')+'</button>'}).join("");
   return '<div class="ob">'+
-    (obStep===0?'<div class="stack"><div class="mark"><i>0→1</i>Zero to One</div><p class="muted">Before anything else, a quick check of where you are today. Nine short questions, one at a time. Your answers decide your first three missions.</p></div>'+(obRetake?'':'<details class="guide"><summary>Have a backup code?</summary><div class="gbody"><textarea id="restoreOb" placeholder="Paste your backup code" style="min-height:70px;font:500 .75rem/1.3 var(--f-mono)"></textarea><button class="btn small" data-act="restore-ob" style="align-self:flex-start">Restore my progress</button></div></details>'):'')+
+    (obStep===0?'<div class="stack"><div class="mark"><i>0→1</i>Zero to One</div><p class="muted">Before anything else, a quick check of where you are today. Nine short questions, one at a time. Your answers decide your first three missions.</p></div>'+(obRetake?'':'<details class="guide"><summary>Have a backup code?</summary><div class="gbody"><textarea id="restoreOb" placeholder="Paste your backup code" style="min-height:70px;font:500 .75rem/1.3 var(--f-mono)"></textarea><span class="muted" style="font-size:.78rem">App version 3</span><button class="btn small" data-act="restore-ob" style="align-self:flex-start">Restore my progress</button></div></details>'):'')+
     '<div class="stack"><div class="row" style="justify-content:space-between"><span class="eyebrow num">Baseline · '+(obStep+1)+' of '+QUESTIONS.length+'</span>'+(obStep>0?'<button class="link" data-act="ob-back">Back</button>':'')+'</div><div class="ob-bar"><i style="width:'+((obStep)/QUESTIONS.length*100)+'%"></i></div></div>'+
     '<div class="stack"><h1 class="ob-q">'+esc(q.q)+'</h1>'+(q.sub?'<p class="muted">'+esc(q.sub)+'</p>':'')+'</div>'+
     '<div class="opts">'+optHTML+'</div>'+
@@ -769,9 +769,9 @@ document.addEventListener("click",e=>{
   else if(a==="rebase"){obAnswers=Object.assign({},S.baseline);obStep=0;obIntro=false;obRetake=true;render();window.scrollTo(0,0)}
   else if(a==="reset"){confirmReset=true;render()}
   else if(a==="reset-no"){confirmReset=false;render()}
-  else if(a==="restore-ob"){const raw=($("#restoreOb").value||"").trim();try{const p=JSON.parse(decodeURIComponent(escape(atob(cleanCode(raw)))));if(!p||p.v!==1)throw 0;S=Object.assign(blank(),p);save();loadDraft();tab="today";toast("Progress restored");render()}catch(_){toast("That code doesn't look right. Copy the whole thing and try again.")}}
+  else if(a==="restore-ob"){const raw=($("#restoreOb").value||"").trim();try{const p=parseZ2(raw)||JSON.parse(decodeURIComponent(escape(atob(cleanCode(raw)))));if(!p||p.v!==1)throw 0;S=Object.assign(blank(),p);save();loadDraft();tab="today";toast("Progress restored");render()}catch(_){toast("That code doesn't look right. Copy the whole thing and try again.")}}
   else if(a==="backup"){const code="Z1:"+btoa(unescape(encodeURIComponent(JSON.stringify(S))));const out=$("#backupOut");out.value=code;out.hidden=false;const sel=()=>{out.focus();out.select();toast("Selected. Copy it from the box.")};try{navigator.clipboard.writeText(code).then(()=>toast("Backup code copied"),sel)}catch(_){sel()}}
-  else if(a==="restore"){const raw=($("#restoreIn").value||"").trim();try{const p=JSON.parse(decodeURIComponent(escape(atob(cleanCode(raw)))));if(!p||p.v!==1)throw 0;restorePending=p;restoreText=raw;render();const r=$("#restoreIn");if(r)r.value=restoreText}catch(_){toast("That code doesn't look right. Copy the whole thing and try again.")}}
+  else if(a==="restore"){const raw=($("#restoreIn").value||"").trim();try{const p=parseZ2(raw)||JSON.parse(decodeURIComponent(escape(atob(cleanCode(raw)))));if(!p||p.v!==1)throw 0;restorePending=p;restoreText=raw;render();const r=$("#restoreIn");if(r)r.value=restoreText}catch(_){toast("That code doesn't look right. Copy the whole thing and try again.")}}
   else if(a==="restore-no"){restorePending=null;render()}
   else if(a==="restore-yes"){S=Object.assign(blank(),restorePending);restorePending=null;save();loadDraft();toast("Restored");tab="today";render()}
   else if(a==="reset-yes"){S=blank();obAnswers={};obStep=0;confirmReset=false;save();render()}
@@ -785,6 +785,16 @@ document.addEventListener("click",e=>{const b=e.target.closest('[data-act="retak
 document.addEventListener("change",e=>{const pc=e.target.closest("[data-plan]");if(pc){S.plan=S.plan||{};if(pc.checked)S.plan[pc.dataset.plan]=Date.now();else delete S.plan[pc.dataset.plan];save();if(pc.checked)toast("+"+XP.plan+" XP");setTimeout(render,350);return}
   const c=e.target.closest("[data-setup]");if(c&&c.checked){S.setup[c.dataset.setup]=Date.now();save();toast("Set up. Future you says thanks.");setTimeout(render,500)}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&ov)closeStuck()});
+/* short code: Z2-<10 baseline chars>[-MMDD-<levels per mission>]... */
+function parseZ2(raw){
+  const r=String(raw).replace(/\s+/g,"").toLowerCase();const m=r.match(/z2-([0-9a-z]{10})((?:-\d{4}-[0-2]*)*)/);if(!m)return null;
+  const b=m[1],Q=QUESTIONS;const pick=(qi,ch)=>{const o=Q[qi].opts[parseInt(ch,36)];if(!o)throw 0;return o[0]};
+  const mask=parseInt(b.slice(7,9),36);
+  const baseline={teeth:pick(0,b[0]),wash:pick(1,b[1]),clothes:pick(2,b[2]),meals:pick(3,b[3]),water:pick(4,b[4]),sleep:pick(5,b[5]),space:pick(6,b[6]),blocks:Q[7].opts.filter((o,i)=>mask&(1<<i)).map(o=>o[0]),energy:pick(8,b[9])};
+  const plan=buildPlan(baseline);const ORDER=["teeth","wash","food","water","clothes","space","sleep"];const days={};const yr=todayKey().slice(0,4);
+  (m[2].match(/-\d{4}-[0-2]*/g)||[]).forEach(seg=>{const parts=seg.split("-");const md=parts[1],lv=parts[2]||"";const done={};[...lv].forEach((c,i)=>{if(c==="1")done[ORDER[i]]="min";if(c==="2")done[ORDER[i]]="full"});days[yr+"-"+md.slice(0,2)+"-"+md.slice(2)]={done,set:plan.missions.slice()}});
+  return {v:1,onboarded:true,baseline,missions:plan.missions,queue:plan.queue,days,journal:[],plan:{},setup:{},createdAt:Date.now()};
+}
 function cleanCode(r){r=String(r).replace(/\s+/g,"");const m=r.match(/Z1:([A-Za-z0-9+\/=_-]+)/);r=(m?m[1]:r.replace(/^Z1:/,"")).replace(/[^A-Za-z0-9+\/=_-]/g,"").replace(/-/g,"+").replace(/_/g,"/");while(r.length%4)r+="=";return r}
 function keepNote(){const n=$("#jnote");if(n)jDraft.note=n.value}
 function loadDraft(){const j=S.journal.find(x=>x.date===todayKey());jDraft=j?{energy:j.energy||0,helped:(j.helped||[]).slice(),blocked:(j.blocked||[]).slice(),note:j.note||""}:{energy:0,helped:[],blocked:[],note:""}}
