@@ -1,0 +1,802 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Zero to One</title>
+<meta name="theme-color" content="#EDF0F6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0D1322" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Zero to One">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one phone-width column, a dawn horizon that brightens as today's floor fills, bottom tab bar. */
+:root{
+  --bg:#EDF0F6; --surface:#FFFFFF; --surface-2:#F5F7FB; --ink:#151D30; --muted:#5A6378; --line:#D8DDE8;
+  --sun:#D9661F; --sun-ink:#B4501A; --sun-soft:#FDE7D6; --done:#1C7F67; --done-soft:#D5EFE6;
+  --sky-top:#BCCBE6; --sky-low:#F6D4BD; --hill:#9DAAC6; --hill-2:#7D8BAA; --on-sun:#FFFFFF;
+  --shadow:0 1px 2px rgba(21,29,48,.06),0 6px 20px rgba(21,29,48,.06);
+  --f-display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --f-body:"Figtree","Segoe UI",system-ui,-apple-system,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D1322; --surface:#151D31; --surface-2:#1A2339; --ink:#E7EBF4; --muted:#97A1B8; --line:#263049;
+  --sun:#F2914D; --sun-ink:#F6A66B; --sun-soft:#3A271D; --done:#43C49F; --done-soft:#123630;
+  --sky-top:#0F1730; --sky-low:#4A2C3A; --hill:#1E2843; --hill-2:#161E34; --on-sun:#1A0F08;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D1322; --surface:#151D31; --surface-2:#1A2339; --ink:#E7EBF4; --muted:#97A1B8; --line:#263049;
+  --sun:#F2914D; --sun-ink:#F6A66B; --sun-soft:#3A271D; --done:#43C49F; --done-soft:#123630;
+  --sky-top:#0F1730; --sky-low:#4A2C3A; --hill:#1E2843; --hill-2:#161E34; --on-sun:#1A0F08;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25); color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.5 var(--f-body);-webkit-font-smoothing:antialiased}
+.wrap{max-width:600px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px calc(96px + env(safe-area-inset-bottom,0px))}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;letter-spacing:-.01em}
+h1{font-size:2rem;line-height:1.1;font-weight:800}
+h2{font-size:1.35rem;line-height:1.2;font-weight:700}
+h3{font-size:1.05rem;font-weight:700}
+p{margin:0}
+.muted{color:var(--muted)}
+.eyebrow{font:500 .72rem/1 var(--f-mono);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.stack{display:flex;flex-direction:column;gap:12px}
+.stack-lg{display:flex;flex-direction:column;gap:20px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.num{font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.btn{border:0;border-radius:12px;padding:12px 18px;font-weight:600;background:var(--sun);color:var(--on-sun);min-height:46px;transition:transform .12s ease,filter .12s}
+.btn:active{transform:scale(.98)}
+.btn:hover{filter:brightness(1.05)}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn.soft{background:var(--sun-soft);color:var(--sun-ink)}
+.btn.block{width:100%}
+.btn.small{min-height:38px;padding:8px 14px;font-size:.92rem}
+.link{background:none;border:0;padding:4px 0;color:var(--sun-ink);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.panel{background:var(--surface-2);border-radius:var(--r);padding:14px 16px}
+
+/* top bar */
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+.mark{white-space:nowrap;font:800 1.15rem/1 var(--f-display);letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
+.mark i{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--ink);color:var(--bg);font-style:normal;font-size:.8rem}
+.rank{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 12px 6px 6px}
+.rank b{font:700 .85rem/1 var(--f-display)}
+.rank small{white-space:nowrap;font:500 .72rem/1 var(--f-mono);color:var(--muted)}
+.ring{width:30px;height:30px}
+
+/* dawn hero */
+.dawn{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:var(--sky-top)}
+.dawn svg{display:block;width:100%;height:auto}
+.dawn .sun{transition:transform 1.1s cubic-bezier(.2,.8,.2,1)}
+.dawn .glow{transition:opacity 1.1s ease}
+.dawn-text{position:absolute;left:16px;top:14px;right:16px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.dawn-text .big{font:800 2.4rem/1 var(--f-display);letter-spacing:-.03em}
+.dawn-text .big span{color:var(--muted);font-weight:500;font-size:1.3rem}
+.chip-live{font:500 .72rem/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;background:var(--surface);border-radius:999px;padding:6px 10px;border:1px solid var(--line)}
+
+/* week dots */
+.dots{display:grid;grid-template-columns:repeat(14,1fr);gap:6px}
+.dot{aspect-ratio:1;max-width:100%;border-radius:50%;border:1.5px solid var(--line);background:transparent}
+.dot.on{background:var(--done);border-color:var(--done)}
+.dot.today{outline:2px solid var(--sun);outline-offset:2px}
+
+/* missions */
+.mission{display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;transition:background .3s,border-color .3s}
+.mission.is-done{background:var(--done-soft);border-color:transparent}
+.m-icon{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--sun-soft);color:var(--sun-ink)}
+.mission.is-done .m-icon{background:var(--done);color:var(--surface)}
+.m-icon svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.m-body{min-width:0;display:flex;flex-direction:column;gap:6px}
+.m-head{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.m-xp{font:500 .75rem/1 var(--f-mono);color:var(--muted);white-space:nowrap}
+.m-min{font-size:.95rem}
+.m-min b{font-weight:600}
+.m-anchor{font-size:.82rem;color:var(--muted)}
+.m-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;align-items:center}
+.m-done{display:flex;align-items:center;gap:8px;color:var(--done);font-weight:600;font-size:.95rem}
+.check{width:20px;height:20px}
+
+.banner{border-radius:var(--r);padding:16px;background:var(--sun-soft);color:var(--ink);display:flex;flex-direction:column;gap:8px}
+.banner h3{color:var(--sun-ink)}
+
+/* setup quest */
+.quest{display:flex;gap:12px;align-items:flex-start}
+.quest input{width:22px;height:22px;accent-color:var(--done);flex:none;margin-top:2px}
+.quest label{cursor:pointer}
+.copyline{display:flex;gap:8px;align-items:center;background:var(--surface);border:1px dashed var(--line);border-radius:10px;padding:8px 10px;margin-top:6px}
+.copyline code{font:500 .85rem/1.3 var(--f-mono);flex:1;min-width:0;user-select:all}
+
+/* onboarding */
+.ob{min-height:70vh;display:flex;flex-direction:column;gap:22px;padding-top:12px}
+.ob-bar{height:6px;border-radius:99px;background:var(--line);overflow:hidden}
+.ob-bar i{display:block;height:100%;background:var(--sun);transition:width .4s}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{text-align:left;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:14px 16px;font-weight:500;min-height:52px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.opt:hover{border-color:var(--sun)}
+.opt[aria-pressed="true"]{border-color:var(--sun);background:var(--sun-soft)}
+.ob-q{font-size:1.75rem}
+
+/* chips */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px;font-size:.92rem;font-weight:500}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.seg{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.seg .chip{border-radius:10px;padding:10px 0;text-align:center}
+textarea{width:100%;min-height:90px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:12px;font:inherit;resize:vertical}
+
+/* path */
+.lvl{display:grid;grid-template-columns:36px 1fr;gap:14px}
+.lvl-n{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font:800 1rem/1 var(--f-display);background:var(--line);color:var(--muted)}
+.lvl.now .lvl-n{background:var(--sun);color:var(--on-sun)}
+.lvl.locked{opacity:.7}
+.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--done);border-radius:99px;transition:width .6s}
+.req{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:.92rem}
+.req .bar{grid-column:1/-1}
+.list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px}
+.list li{display:flex;gap:8px;font-size:.92rem}
+.list li::before{content:"";flex:none;width:6px;height:6px;border-radius:50%;background:var(--muted);margin-top:.55em}
+.queue{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.queue:first-child{border-top:0}
+
+/* journal entries */
+.entry{border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:6px}
+.tag{font-size:.78rem;border-radius:6px;padding:2px 8px;background:var(--surface-2);border:1px solid var(--line)}
+.tag.bad{background:var(--sun-soft);border-color:transparent;color:var(--sun-ink)}
+.tag.good{background:var(--done-soft);border-color:transparent;color:var(--done)}
+
+/* stuck overlay */
+.overlay{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column;padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ov-inner{max-width:560px;width:100%;margin:0 auto;flex:1;display:flex;flex-direction:column;gap:20px}
+.step{font:800 clamp(1.9rem,7vw,2.8rem)/1.1 var(--f-display);letter-spacing:-.02em;text-wrap:balance}
+.step-dots{display:flex;gap:6px}
+.step-dots i{flex:1;height:5px;border-radius:9px;background:var(--line)}
+.step-dots i.on{background:var(--sun)}
+.timer{font:500 2.2rem/1 var(--f-mono);font-variant-numeric:tabular-nums}
+
+/* tabs */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
+.tabs-in{max-width:600px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
+/* plan */
+.track{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:3px}
+.tday{display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 0 10px;border-radius:10px;font-variant-numeric:tabular-nums}
+.tday.is-today{background:var(--sun-soft)}
+.tday .wd{font:500 .62rem/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tday .dn{font:700 1rem/1 var(--f-display)}
+.tday .st{font:500 .62rem/1 var(--f-mono);color:var(--muted)}
+.tday .box{width:12px;height:12px;color:var(--sun-ink)}
+.tday .box.none{visibility:hidden}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.8rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.pday{display:grid;grid-template-columns:52px 1fr;gap:12px;align-items:start}
+.pdate{text-align:center;border-radius:12px;padding:8px 0;background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.pdate b{display:block;font:800 1.3rem/1 var(--f-display)}
+.pdate small{font:500 .65rem/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.pday.is-today .pdate{background:var(--sun);border-color:var(--sun);color:var(--on-sun)}
+.pday.is-today .pdate small{color:var(--on-sun)}
+.pday.is-past{opacity:.85}
+.ptag{white-space:nowrap;align-self:flex-start;font:500 .68rem/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;padding:4px 8px;border-radius:6px;background:var(--sun-soft);color:var(--sun-ink)}
+.ptag.opt{background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+.pitem{display:flex;gap:10px;align-items:flex-start;font-size:.95rem}
+.pitem input{width:20px;height:20px;accent-color:var(--done);flex:none;margin-top:2px}
+.pitem input:disabled{opacity:.4}
+.pitem label{min-width:0}
+.pitem.done label{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--line)}
+.floorline{font-size:.85rem;color:var(--muted);display:flex;gap:6px;align-items:center}
+.floorline i{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--line);display:inline-block}
+.floorline i.on{background:var(--done);border-color:var(--done)}
+details.guide{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:0 16px}
+details.guide summary{cursor:pointer;list-style:none;padding:14px 0;display:flex;justify-content:space-between;gap:10px;align-items:center;font:700 1rem/1.3 var(--f-display)}
+details.guide summary::-webkit-details-marker{display:none}
+details.guide summary::after{content:"+";font:500 1.2rem/1 var(--f-mono);color:var(--muted)}
+details.guide[open] summary::after{content:"–"}
+details.guide .gbody{padding:0 0 16px;display:flex;flex-direction:column;gap:10px}
+details.guide summary small{font:500 .7rem/1 var(--f-mono);color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-left:auto}
+.tab{background:none;border:0;padding:10px 0 12px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:.75rem;font-weight:600;color:var(--muted)}
+.tab svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tab[aria-current="page"]{color:var(--sun-ink)}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);opacity:0;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:600;font-size:.92rem;transition:.25s;z-index:60;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.xp-pop{font:500 .8rem/1 var(--f-mono);color:var(--sun-ink)}
+.storage-note{font-size:.8rem;color:var(--muted);display:flex;gap:6px;align-items:center}
+.storage-note i{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block}
+.storage-note i.ok{background:var(--done)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+/* standalone: own reset and safe areas */
+html{background:var(--bg)}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+.wrap{padding-block:calc(16px + env(safe-area-inset-top,0px)) calc(96px + env(safe-area-inset-bottom,0px))}
+html,body{overscroll-behavior-y:none}
+</style>
+</head>
+<body>
+
+<div class="wrap" id="app" aria-live="polite"></div>
+<nav class="tabs" id="tabs" hidden aria-label="Sections">
+  <div class="tabs-in">
+    <button class="tab" data-tab="today"><svg viewBox="0 0 24 24"><circle cx="12" cy="14" r="4"/><path d="M3 18h18M12 4v3M5.6 7.6l1.8 1.8M18.4 7.6l-1.8 1.8"/></svg>Today</button>
+    <button class="tab" data-tab="plan"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M8 15h3"/></svg>Plan</button>
+    <button class="tab" data-tab="journal"><svg viewBox="0 0 24 24"><path d="M6 3h11a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H6z"/><path d="M6 3v18M10 8h5M10 12h5"/></svg>Journal</button>
+    <button class="tab" data-tab="path"><svg viewBox="0 0 24 24"><circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M8 18h5a3 3 0 0 0 0-6h-2a3 3 0 0 1 0-6h5"/></svg>Path</button>
+    <button class="tab" data-tab="me"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Me</button>
+  </div>
+</nav>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- content ---------- */
+const ICONS = {
+  teeth:'<path d="M7 3c-2.5 0-4 2-4 4.5 0 3 1.5 4 2 7.5.4 3 1 6 2.5 6s1.6-4 2.5-5.5c.5-.8 1.5-.8 2 0 .9 1.5 1 5.5 2.5 5.5s2.1-3 2.5-6c.5-3.5 2-4.5 2-7.5C21 5 19.5 3 17 3c-2 0-3 1-5 1S9 3 7 3z"/>',
+  water:'<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/><path d="M9 15a3 3 0 0 0 3 3"/>',
+  food:'<path d="M3 11h18a9 9 0 0 1-18 0z"/><path d="M8 7c0-2 2-2 2-4M13 7c0-2 2-2 2-4"/>',
+  wash:'<circle cx="8" cy="14" r="4"/><circle cx="16" cy="9" r="3"/><circle cx="17" cy="17" r="2"/>',
+  clothes:'<path d="M8 3l-5 3 2 4 2-1v12h10V9l2 1 2-4-5-3c0 2-2 3-4 3S8 5 8 3z"/>',
+  space:'<path d="M4 20h16M7 20V10h10v10M10 10V6h4v4"/>',
+  sleep:'<path d="M20 14.5A8 8 0 1 1 9.5 4 6.5 6.5 0 0 0 20 14.5z"/>'
+};
+const M = {
+  teeth:{name:"Brush teeth", min:"Brush just your front teeth for 20 seconds. Spit, don't rinse.", full:"Brush everything for 2 minutes. Spit, don't rinse.",
+    anchor:"Right after you use the bathroom for the first time today.",
+    steps:["Stand up.","Walk to the sink.","Pick up your toothbrush.","Put toothpaste on it. A pea-sized bit is plenty.","Brush your front teeth. Count to 20.","Spit out the extra. Don't rinse with water, so the fluoride keeps working. That counts."]},
+  wash:{name:"Wash up", min:"Warm washcloth on face, armpits and private areas. Then deodorant.", full:"Take a shower. Shampoo and conditioner every second day.",
+    anchor:"Before you get dressed.",
+    steps:["Go to the bathroom.","Run warm water.","Wet a washcloth and add a little soap.","Wipe your face.","Wipe under your arms.","Wipe your private areas.","Put on deodorant. Done."]},
+  food:{name:"Eat something real", min:"Eat one thing with protein: eggs, yogurt, toast with peanut butter, cheese, a protein bar.", full:"Eat two real meals today.",
+    anchor:"Before 1pm, or within two hours of waking.",
+    steps:["Walk to the kitchen.","Open the fridge or cupboard.","Pick the easiest thing with protein.","Put it on a plate or hold it.","Sit down and eat it. Done."]},
+  water:{name:"Drink water", min:"Drink one full glass.", full:"Drink four glasses across the day.",
+    anchor:"Right when you sit down at your desk or bed.",
+    steps:["Get a glass or bottle.","Fill it with water.","Drink it. Breaks are fine. Done."]},
+  clothes:{name:"Clean clothes", min:"Put on clean underwear and clean socks.", full:"Put on a full clean outfit.",
+    anchor:"Right after you wash up.",
+    steps:["Find clean underwear.","Find clean socks.","Put them on.","Old ones go in a laundry pile, not the floor. Done."]},
+  space:{name:"Reset your space", min:"Throw away five pieces of trash.", full:"Tidy for 10 minutes with a timer.",
+    anchor:"When you get home, or after dinner.",
+    steps:["Grab a bag.","Pick up one piece of trash.","Four more. Count them.","Tie the bag or leave it by the door. Done."]},
+  sleep:{name:"Wind down", min:"Put your phone on the charger, away from your bed.", full:"Lights out by your target bedtime.",
+    anchor:"At the same time every night. Set an alarm for it.",
+    steps:["Pick up your phone.","Walk it to the charger across the room.","Plug it in.","Get into bed. You don't have to sleep yet. Done."]}
+};
+/* Hair wash every second day, starting Oct 22 */
+const HAIR_START="2026-10-22";
+function hairDay(k){return Math.abs(daysBetween(HAIR_START,k))%2===0}
+const FULL = {
+  teeth:{target:120,steps:["Toothbrush and toothpaste in hand.","Start the 2-minute timer below.","Top teeth on the left. Outsides, then insides.","Top teeth on the right.","Bottom teeth on the left.","Bottom teeth on the right.","The flat chewing tops, all the way around.","Brush your tongue gently, front to back.","Spit out the extra. Don't rinse. Full version done."]},
+  wash:{target:k=>hairDay(k)?900:600,steps:k=>hairDay(k)
+    ?["Grab your towel.","Take a shower. Shampoo and conditioner today.","Dry off.","Deodorant. Full version done."]
+    :["Grab your towel.","Take a shower. No hair today.","Dry off.","Deodorant. Full version done."]},
+  food:{target:600,steps:["This is your second real meal today.","Pick the easiest one: eggs and toast, a sandwich, a frozen meal, leftovers.","Get out what you need.","Make it or heat it. Simple is fine.","Put it on a plate.","Sit down and eat it. Full version done."]},
+  water:{target:120,steps:["Fill your glass or bottle.","Drink it now.","Refill it and leave it where you sit.","Each time it's empty, refill it. Four glasses today is the full version."]},
+  clothes:{target:120,steps:["Find clean underwear and socks.","Find a clean shirt.","Find clean pants or shorts.","Put them all on.","Worn clothes go in the laundry pile. Full version done."]},
+  space:{target:600,steps:["Grab a trash bag.","Start the 10-minute timer below.","Trash first. Everything goes in the bag.","Dishes next. Take them to the kitchen.","Clothes next. Put them all in one pile.","When the timer ends, stop, even in the middle of something. Full version done."]},
+  sleep:{target:600,steps:["Set an alarm for tomorrow's bedtime too.","Phone on the charger, across the room.","Lights down. Screens off.","Brush your teeth if you haven't. Spit, don't rinse.","Get into bed by your target time. Full version done."]}
+};
+const SETUP = {
+  teeth:{t:"Make your toothbrush impossible to miss.",d:"Leave the brush, toothpaste and deodorant out on the sink, not in a cupboard. If the bathroom feels far, keep a second cheap set by your bed with a cup of water."},
+  wash:{t:"Build a wash kit.",d:"Put a washcloth, soap and deodorant together somewhere you'll see them every morning."},
+  food:{t:"Stock three no-cook foods.",d:"Yogurt, bananas, peanut butter and bread, cheese, protein bars. Food you can eat in under two minutes."},
+  water:{t:"Park a full water bottle where you sit.",d:"Fill it now and leave it by your bed or desk."},
+  clothes:{t:"Lay out tomorrow's underwear and socks.",d:"Put them on a chair tonight so the morning has one less decision."},
+  space:{t:"Open a trash bag in your room.",d:"Hang it on a door handle or chair. Trash gets easy when the bag is already there."},
+  sleep:{t:"Move your phone charger across the room.",d:"Far enough that you have to stand up to reach it."},
+  alarm:{t:"Set one phone alarm for your first mission.",d:"Label it with the tiny version so it tells you exactly what to do:",copy:"Teeth. Just the front ones. 20 seconds."}
+};
+const QUESTIONS = [
+  {id:"teeth",q:"When did you last brush your teeth?",sub:"No wrong answers. This just sets your starting point.",opts:[["today","Today"],["yesterday","Yesterday"],["days","A few days ago"],["week","A week or more"],["unsure","I don't remember"]]},
+  {id:"wash",q:"When did you last shower or wash your body?",opts:[["today","Today"],["yesterday","Yesterday"],["days","A few days ago"],["week","A week or more"],["unsure","I don't remember"]]},
+  {id:"clothes",q:"Do you have clean clothes to wear right now?",opts:[["yes","Yes, enough for a few days"],["some","One or two things"],["no","Not really"]]},
+  {id:"meals",q:"How many real meals did you eat yesterday?",sub:"Rough is fine. A snack counts as half.",opts:[["0","None"],["1","One"],["2","Two"],["3","Three or more"]]},
+  {id:"water",q:"How much water do you usually drink?",opts:[["rarely","Hardly any"],["some","A glass or two"],["plenty","Through most of the day"]]},
+  {id:"sleep",q:"When do you usually fall asleep?",opts:[["early","Before 11pm"],["mid","11pm to 1am"],["late","1am to 3am"],["vlate","After 3am"],["irregular","It changes a lot"]]},
+  {id:"space",q:"How does your room feel right now?",opts:[["ok","Manageable"],["messy","Messy, but I can move around"],["heavy","Overwhelming"]]},
+  {id:"blocks",multi:true,q:"What usually stops you from starting?",sub:"Pick any that fit.",opts:[["forgot","I forget"],["overwhelm","It feels like too much"],["energy","No energy"],["phone","Phone or distraction"],["point","I don't see the point"],["supplies","I don't have what I need"]]},
+  {id:"energy",q:"When do you usually have the most energy?",opts:[["morning","Morning"],["afternoon","Afternoon"],["evening","Evening"],["night","Late at night"]]}
+];
+const HELPED = [["reminder","Saw a reminder"],["ready","Stuff was ready"],["tiny","Did the tiny version"],["stuck","Used I'm stuck"],["person","Someone helped"],["audio","Music or a podcast"],["just","Just did it"]];
+const BLOCKED = [["forgot","Forgot"],["overwhelm","Overwhelmed"],["energy","No energy"],["want","Didn't want to"],["phone","Phone / distracted"],["supplies","Missing supplies"],["sleep","Bad sleep"],["mood","Low mood"]];
+const FIX = {
+  forgot:"Set a phone alarm labelled with the tiny version, and put the item where your eyes land.",
+  overwhelm:"Only do the minimum. Tap I'm stuck and go one step at a time.",
+  energy:"Use the low-energy version: washcloth instead of shower, snack instead of meal.",
+  want:"Agree to two minutes only. Stopping after that is allowed.",
+  phone:"Do the mission before you unlock your phone, or leave it in another room for two minutes.",
+  supplies:"Add the missing item to a shopping list right now, then do the setup quest.",
+  sleep:"Tonight the only goal is the Wind down minimum.",
+  mood:"Low-mood days count with one mission. If your mood is low most days for two weeks or more, talk to a doctor."
+};
+const RANKS = [[0,"Zero"],[60,"Flicker"],[180,"Ember"],[400,"Spark"],[750,"Kindling"],[1200,"Flame"],[1800,"Torch"],[2600,"Beacon"],[3600,"Lighthouse"],[5000,"One"]];
+const XP = {min:10, full:15, showed:10, comeback:15, floor:10, journal:5, plan:5};
+
+/* Oct 22 to Oct 31 plan, built around deliveries. Each day adds at most one new thing. */
+const PLAN = [
+  {date:"2026-10-22",title:"Day One",items:[
+    ["sink","Leave your toothbrush, toothpaste and deodorant out on the sink."],
+    ["brush","Brush with the toothpaste you already have. Front teeth, 20 seconds, spit, don't rinse."]]},
+  {date:"2026-10-23",title:"Day Two",items:[
+    ["again","Do your missions again, even just the minimums. Doing it a second time is how a habit starts."]]},
+  {date:"2026-10-24",title:"Delivery: toothpaste, mouthwash, gua sha",delivery:true,items:[
+    ["label","Check the new toothpaste box. Under \"Active ingredient\" it should say fluoride."],
+    ["park","New toothpaste goes by the sink. Mouthwash and gua sha go together in one \"extras\" spot."]],
+    note:"Keep using your current toothpaste today. Nothing new to do yet."},
+  {date:"2026-10-25",title:"Switch toothpaste",items:[
+    ["switch","Brush with the new toothpaste. Spit, don't rinse."],
+    ["backup","Put the old toothpaste by your bed as a backup."]]},
+  {date:"2026-10-26",title:"Mouthwash unlocked",items:[
+    ["mwtry","Optional: try the mouthwash once, after lunch. Not right after brushing."]],optional:true},
+  {date:"2026-10-27",title:"Gua sha unlocked",items:[
+    ["gstry","Optional: 3 minutes of gentle gua sha, only on a day you've brushed. Read the guide first."]],optional:true},
+  {date:"2026-10-28",title:"Night brush and a short walk",items:[
+    ["night","If you brushed on 4 of the last 5 days, brush again before bed. If not, skip this and keep the morning one."],
+    ["walk","Optional: walk outside for 5 minutes. Any pace."]]},
+  {date:"2026-10-29",title:"Check in with Claude",items:[
+    ["review","Tell Claude: \"check my progress\"."],
+    ["jrnl","Do the end-of-day check-in in the Journal tab."]]},
+  {date:"2026-10-30",title:"Make room for the bars",items:[
+    ["clear","Clear a patch of floor about the size of a yoga mat. Hard, flat floor is best."]]},
+  {date:"2026-10-31",title:"Delivery: parallettes (push-up bars)",delivery:true,items:[
+    ["bars","Unbox the bars. Set them on the cleared floor and press down hard to check they don't rock."],
+    ["pushup","Optional: one easy set of 3 to 5 knee push-ups on the bars. Stop while it still feels easy."]],
+    note:"Missions first. The bars are a bonus today, not a new daily requirement."}
+];
+const EXTRAS = [
+  {id:"x-night",from:"2026-10-29",t:"Night brush",d:"Before bed. Spit, don't rinse."},
+  {id:"x-mw",from:"2026-10-27",t:"Mouthwash",d:"At a different time from brushing, like after lunch."},
+  {id:"x-gs",from:"2026-10-28",t:"Gua sha",d:"3 to 5 minutes, light pressure, with moisturizer."},
+  {id:"x-walk",from:"2026-10-29",t:"Short walk",d:"5 minutes outside."},
+  {id:"x-push",from:"2026-11-01",t:"Push-up bars",d:"One easy set from your knees."}
+];
+const GUIDES = [
+  {id:"paste",t:"Switching toothpaste",when:"Oct 25",body:[
+    "Check the box first. Under \"Active ingredient\" it should list a fluoride, such as sodium fluoride or stannous fluoride. If it does, it protects against cavities like your current toothpaste. If it doesn't, keep using your current one.",
+    "Use a pea-sized amount. Brush, then spit out the extra. Don't rinse with water, so the fluoride stays on your teeth.",
+    "Whitening toothpastes make some people's teeth sensitive. If your teeth or gums sting for more than a few days, go back to the old toothpaste and mention it to a dentist.",
+    "Keep the old toothpaste by your bed. A backup means a night brush never depends on walking to the bathroom."]},
+  {id:"mw",t:"Mouthwash",when:"Optional · from Oct 26",body:[
+    "Mouthwash is an extra. It never replaces brushing, and a day with brushing and no mouthwash is a complete day.",
+    "Use it at a different time from brushing, like after lunch. Rinsing right after brushing washes off the toothpaste's fluoride.",
+    "Follow the amount and swish time on the bottle. Spit it out and don't swallow it.",
+    "If the label lists fluoride, wait 30 minutes before eating or drinking. If it burns or your gums get sore, stop using it."]},
+  {id:"gs",t:"Gua sha",when:"Optional · from Oct 27",body:[
+    "Gua sha is a bonus for days you want it. It is not part of your routine, and skipping it costs nothing.",
+    "Start with a clean face and a clean tool. Put on moisturizer or face oil so the tool glides. If you don't have anything slippery, skip it, because dragging pulls the skin.",
+    "Hold the tool almost flat against your skin. Use light pressure, about as hard as spreading lotion. Use slow, short strokes from the centre of your face outward, and down the sides of your neck.",
+    "3 to 5 minutes is enough. Avoid pimples, cuts, rashes and sunburn, and go extra light under the eyes. Wash the tool with soap and water afterward.",
+    "What to expect: it can feel relaxing and may make your face less puffy for a few hours. It won't permanently change the shape of your face. Redness that lasts or any bruising means you pressed too hard."]},
+  {id:"bars",t:"Parallettes (push-up bars)",when:"From Oct 31",body:[
+    "Parallettes are the wooden push-up bars. No push-ups before they arrive. Until then, the walk on Oct 28 is all the exercise this plan asks for.",
+    "Put the bars on a hard, flat, non-slip floor, not the edge of a rug. Press down on each one to check it doesn't rock.",
+    "Grip the handles with straight wrists. Start from your knees, keep your body in a straight line from knees to head, lower your chest slowly, then push back up.",
+    "Do one set of 3 to 5 and stop while it still feels easy. Stop if you feel sharp pain in your wrists or shoulders, as opposed to muscles working. If you have an injury or health condition, check with a doctor first.",
+    "A real strength plan comes later, built with Claude once your daily missions hold steady."]}
+];
+function planDay(k){return PLAN.find(p=>p.date===k)}
+function planDone(k,id){return !!(S.plan&&S.plan[k+":"+id])}
+
+/* ---------- dates (day turns over at 4am, so late nights still count) ---------- */
+function keyOf(d){const x=new Date(d.getTime()-4*3600e3);return x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0")}
+function todayKey(){return keyOf(new Date())}
+function shiftKey(k,n){const [y,m,d]=k.split("-").map(Number);const x=new Date(y,m-1,d+n,12);return x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0")}
+function daysBetween(a,b){const p=s=>{const [y,m,d]=s.split("-").map(Number);return Date.UTC(y,m-1,d)};return Math.round((p(b)-p(a))/864e5)}
+function prettyDay(k){const [y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"})}
+
+/* ---------- state ---------- */
+const LS="zero-to-one-v1";
+function blank(){return {v:1,onboarded:false,baseline:{},missions:[],queue:[],setup:{},days:{},journal:[],plan:{},createdAt:Date.now(),updatedAt:0}}
+let S=blank();
+try{const raw=localStorage.getItem(LS);if(raw){const p=JSON.parse(raw);if(p&&p.v===1)S=Object.assign(blank(),p)}}catch(e){}
+let db=null, dbRef=null, dbState="pending", saveTimer=null;
+
+function save(){
+  S.updatedAt=Date.now();
+  try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}
+  if(dbRef){clearTimeout(saveTimer);saveTimer=setTimeout(()=>{dbRef.set(JSON.parse(JSON.stringify(S))).then(()=>{dbState="synced";updateStorageNote()}).catch(()=>{dbState="local";updateStorageNote()})},700)}
+}
+async function connectDb(){
+  try{
+    if(!window.claude||!window.claude.use){dbState="local";updateStorageNote();return}
+    db=await window.claude.use("db");
+    if(!db){dbState="local";updateStorageNote();return}
+    dbRef=db.doc("life/state");
+    const snap=await dbRef.get();
+    const remote=snap&&snap.exists?snap.data():null;
+    if(remote&&remote.v===1&&(remote.updatedAt||0)>(S.updatedAt||0)){S=Object.assign(blank(),remote);try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}render()}
+    else if(S.updatedAt){await dbRef.set(JSON.parse(JSON.stringify(S)))}
+    dbState="synced";updateStorageNote();
+  }catch(e){dbState="local";dbRef=null;updateStorageNote()}
+}
+
+/* ---------- derived ---------- */
+function day(k){return S.days[k]||{done:{}}}
+function showedUp(k){const d=S.days[k];return !!(d&&Object.keys(d.done||{}).length)}
+function shownDays(){return Object.keys(S.days).filter(showedUp).sort()}
+function prevShown(k){const ds=shownDays().filter(x=>x<k);return ds.length?ds[ds.length-1]:null}
+function dayXP(k){
+  const d=S.days[k];if(!d)return 0;let x=0;
+  const done=d.done||{};const ids=Object.keys(done);
+  ids.forEach(id=>x+=done[id]==="full"?XP.full:XP.min);
+  if(ids.length){x+=XP.showed;const p=prevShown(k);if(p&&daysBetween(p,k)>=2)x+=XP.comeback;
+    const set=d.set||[];if(set.length&&set.every(id=>done[id]))x+=XP.floor}
+  if(S.journal.some(j=>j.date===k))x+=XP.journal;
+  Object.keys(S.plan||{}).forEach(pk=>{if(S.plan[pk]&&pk.slice(0,10)===k)x+=XP.plan});
+  return x;
+}
+function totalXP(){const ks=new Set(Object.keys(S.days).concat(S.journal.map(j=>j.date),Object.keys(S.plan||{}).map(pk=>pk.slice(0,10))));let t=0;ks.forEach(k=>t+=dayXP(k));return t}
+function rankOf(xp){let i=0;RANKS.forEach((r,j)=>{if(xp>=r[0])i=j});const cur=RANKS[i],nxt=RANKS[i+1];return {name:cur[1],idx:i,from:cur[0],to:nxt?nxt[0]:cur[0],next:nxt?nxt[1]:null}}
+function countIn(n,pred){const t=todayKey();let c=0;for(let i=0;i<n;i++){if(pred(shiftKey(t,-i)))c++}return c}
+function floorDone(k){const d=S.days[k];if(!d)return false;const set=d.set||[];return set.length>0&&set.every(id=>d.done&&d.done[id])}
+
+function buildPlan(b){
+  const need={
+    wash:{today:0,yesterday:1,days:3,week:4,unsure:4}[b.wash]??2,
+    food:{"0":4,"1":3,"2":1,"3":0}[b.meals]??2,
+    water:{rarely:3,some:1.5,plenty:0}[b.water]??1.5,
+    clothes:{no:3.5,some:2,yes:0}[b.clothes]??1,
+    space:{heavy:2.5,messy:1.5,ok:0}[b.space]??1,
+    sleep:{vlate:3,irregular:2.8,late:2.2,mid:1,early:0}[b.sleep]??1
+  };
+  const order=["wash","food","water","clothes","sleep","space"];
+  const ranked=order.slice().sort((a,c)=>need[c]-need[a]||order.indexOf(a)-order.indexOf(c));
+  return {missions:["teeth",ranked[0],ranked[1]],queue:ranked.slice(2)};
+}
+
+/* ---------- ui helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const icon=id=>'<svg viewBox="0 0 24 24" aria-hidden="true">'+ICONS[id]+'</svg>';
+function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("show");clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove("show"),2200)}
+let restorePending=null, restoreText="";
+let tab="today", obStep=0, obAnswers={}, obIntro=false, jDraft={energy:0,helped:[],blocked:[],note:""}, confirmReset=false;
+try{const t=localStorage.getItem(LS+"-tab");if(t)tab=t}catch(e){}
+if(["today","plan","journal","path","me"].includes(location.hash.slice(1)))tab=location.hash.slice(1);
+
+function storageHTML(){
+  const ok=dbState==="synced";
+  return '<p class="storage-note" id="storageNote"><i class="'+(ok?"ok":"")+'"></i>'+(ok?"Saved to your account. Claude can read it when you ask for a check-in.":dbState==="pending"?"Connecting…":"Saved on this phone. Copy a backup code now and then, so you never lose it.")+'</p>';
+}
+function updateStorageNote(){const n=$("#storageNote");if(n)n.outerHTML=storageHTML()}
+
+/* ---------- views ---------- */
+function render(){
+  const app=$("#app");
+  if(!S.onboarded){$("#tabs").hidden=true;app.innerHTML=obIntro?renderPlanIntro():renderOnboarding();return}
+  $("#tabs").hidden=false;
+  document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-current",b.dataset.tab===tab?"page":"false"));
+  const v={today:renderToday,plan:renderPlan,journal:renderJournal,path:renderPath,me:renderMe}[tab]||renderToday;
+  app.innerHTML=renderTop()+v();
+}
+
+function renderTop(){
+  const xp=totalXP(),r=rankOf(xp);
+  const pct=r.next?(xp-r.from)/(r.to-r.from):1;const C=2*Math.PI*12;
+  return '<header class="top"><div class="mark"><i>0→1</i>Zero to One</div>'+
+    '<div class="rank" title="'+(r.next?(r.to-xp)+' XP to '+r.next:'Top rank')+'"><svg class="ring" viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="12" style="fill:none;stroke:var(--line)" stroke-width="4"/><circle cx="15" cy="15" r="12" style="fill:none;stroke:var(--sun)" stroke-width="4" stroke-linecap="round" stroke-dasharray="'+(C*pct).toFixed(1)+' '+C.toFixed(1)+'" transform="rotate(-90 15 15)"/></svg>'+
+    '<div><b>'+esc(r.name)+'</b><br><small class="num">'+(r.next?xp+' / '+r.to+' XP':xp+' XP')+'</small></div></div></header>';
+}
+
+function renderOnboarding(){
+  const q=QUESTIONS[obStep];const sel=obAnswers[q.id];
+  const optHTML=q.opts.map(([v,l])=>{const on=q.multi?(sel||[]).includes(v):sel===v;return '<button class="opt" data-ans="'+v+'" aria-pressed="'+on+'">'+esc(l)+(on?'<svg class="check" viewBox="0 0 24 24" style="fill:none;stroke:var(--sun-ink)" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>':'')+'</button>'}).join("");
+  return '<div class="ob">'+
+    (obStep===0?'<div class="stack"><div class="mark"><i>0→1</i>Zero to One</div><p class="muted">Before anything else, a quick check of where you are today. Nine short questions, one at a time. Your answers decide your first three missions.</p></div>'+(obRetake?'':'<details class="guide"><summary>Have a backup code?</summary><div class="gbody"><textarea id="restoreOb" placeholder="Paste your backup code" style="min-height:70px;font:500 .75rem/1.3 var(--f-mono)"></textarea><button class="btn small" data-act="restore-ob" style="align-self:flex-start">Restore my progress</button></div></details>'):'')+
+    '<div class="stack"><div class="row" style="justify-content:space-between"><span class="eyebrow num">Baseline · '+(obStep+1)+' of '+QUESTIONS.length+'</span>'+(obStep>0?'<button class="link" data-act="ob-back">Back</button>':'')+'</div><div class="ob-bar"><i style="width:'+((obStep)/QUESTIONS.length*100)+'%"></i></div></div>'+
+    '<div class="stack"><h1 class="ob-q">'+esc(q.q)+'</h1>'+(q.sub?'<p class="muted">'+esc(q.sub)+'</p>':'')+'</div>'+
+    '<div class="opts">'+optHTML+'</div>'+
+    (q.multi?'<button class="btn block" data-act="ob-next">'+((sel||[]).length?'Next':'None of these')+'</button>':'')+
+  '</div>';
+}
+
+function renderPlanIntro(){
+  const plan=buildPlan(obAnswers);
+  const why={wash:"You told me washing has slipped. The washcloth version takes three minutes and still counts.",food:"Your body needs fuel before it can build habits. One thing with protein is enough.",water:"Low water makes low energy worse. One glass is the whole job.",clothes:"Clean clothes change how the whole day feels. Start with underwear and socks.",sleep:"Sleep timing drives everything else. The first step is only moving your phone.",space:"A lighter room makes every other task easier. Five pieces of trash, nothing more."};
+  const firstSetup=SETUP.teeth;
+  return '<div class="ob stack-lg">'+
+    '<div class="stack"><span class="eyebrow">Your Day One</span><h1>Three missions. Each one has a tiny version, and the tiny version counts.</h1></div>'+
+    '<div class="stack">'+plan.missions.map(id=>'<div class="mission"><div class="m-icon">'+icon(id)+'</div><div class="m-body"><h3>'+M[id].name+'</h3><p class="m-min"><b>Minimum:</b> '+esc(M[id].min)+'</p><p class="m-anchor">'+(id==="teeth"?"Teeth come first because everything else is built on top of it. Doing it daily matters more than doing it well.":why[id])+'</p></div></div>').join("")+'</div>'+
+    '<div class="panel stack"><span class="eyebrow">How this works</span><ul class="list"><li>Any one mission done means you showed up today. That is the main score.</li><li>Missing a day costs nothing. Coming back earns a comeback bonus.</li><li>New missions unlock only when these feel easy, not on a schedule.</li></ul></div>'+
+    '<div class="panel stack"><span class="eyebrow">Do this once, right now</span><h3>'+firstSetup.t+'</h3><p class="muted">'+firstSetup.d+'</p></div>'+
+    '<button class="btn block" data-act="ob-finish">Start Day One</button>'+
+  '</div>';
+}
+
+function dawnSVG(p){
+  const sunY=150-p*92;const glow=0.25+p*0.75;
+  return '<svg viewBox="0 0 360 170" role="img" aria-label="Sunrise, '+Math.round(p*100)+'% of today done">'+
+   '<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--sky-top)"/><stop offset="1" style="stop-color:var(--sky-low)"/></linearGradient>'+
+   '<radialGradient id="halo"><stop offset="0" style="stop-color:var(--sun);stop-opacity:.55"/><stop offset="1" style="stop-color:var(--sun);stop-opacity:0"/></radialGradient></defs>'+
+   '<rect width="360" height="170" style="fill:var(--sky-top)"/>'+
+   '<rect class="glow" width="360" height="170" style="fill:url(#sky)" opacity="'+glow.toFixed(2)+'"/>'+
+   '<g class="sun" style="transform:translateY('+sunY.toFixed(1)+'px)"><circle cx="250" cy="0" r="70" style="fill:url(#halo)"/><circle cx="250" cy="0" r="26" style="fill:var(--sun)"/></g>'+
+   '<path d="M0 132 C60 112 110 120 160 128 S260 112 360 124 V170 H0Z" style="fill:var(--hill)"/>'+
+   '<path d="M0 148 C80 136 150 146 220 142 S320 134 360 140 V170 H0Z" style="fill:var(--hill-2)"/>'+
+  '</svg>';
+}
+
+function renderToday(){
+  const k=todayKey();
+  if(!S.days[k])S.days[k]={done:{},set:S.missions.slice()};
+  const d=S.days[k];
+  S.missions.forEach(id=>{if(!d.set.includes(id))d.set.push(id)});
+  const done=d.done;const n=d.set.filter(id=>done[id]).length,tot=d.set.length;
+  const p=tot?n/tot:0;
+  const last7=countIn(7,showedUp);
+  const prev=prevShown(k);const gap=prev?daysBetween(prev,k):0;
+  const h=new Date().getHours();
+  const greet=h<4?"Still up. This counts as today.":h<12?"Good morning.":h<18?"Good afternoon.":"Good evening.";
+
+  let banner="";
+  if(prev&&gap>=2&&!n){
+    banner='<div class="banner"><h3>Welcome back.</h3><p>You were away '+(gap-1)+' day'+(gap-1>1?'s':'')+'. Your XP and rank are all still here. Do one mission, any one, and you get a +'+XP.comeback+' comeback bonus.</p></div>';
+  }else if(!prev&&!n&&!shownDays().length){
+    banner='<div class="banner"><h3>Day One.</h3><p>Pick the easiest mission below and do the minimum. That is a successful day.</p></div>';
+  }
+
+  const missions=d.set.map(id=>{
+    const m=M[id];const st=done[id];
+    return '<article class="mission'+(st?' is-done':'')+'"><div class="m-icon">'+icon(id)+'</div><div class="m-body">'+
+      '<div class="m-head"><h3>'+m.name+'</h3><span class="m-xp num">+'+XP.min+' / +'+XP.full+'</span></div>'+
+      (st?'<div class="m-done"><svg class="check" viewBox="0 0 24 24" style="fill:none;stroke:currentColor" stroke-width="2.6"><path d="M5 12l5 5 9-10"/></svg>'+(st==="full"?"Full version done":"Minimum done. It counts.")+'</div>'+
+        '<div class="m-actions">'+(st==="min"?'<button class="btn small soft" data-act="full" data-id="'+id+'">I did the full version too</button><button class="link" data-act="stuck-full" data-id="'+id+'">Walk me through the full version</button>':'')+'<button class="link" data-act="undo" data-id="'+id+'">Undo</button></div>'
+      :'<p class="m-min"><b>Minimum:</b> '+esc(m.min)+'</p>'+(id==="wash"?'<p class="m-anchor"><b>Full version today:</b> '+(hairDay(k)?'shower with shampoo and conditioner. It\'s a hair day.':'shower, no hair wash. Hair is tomorrow.')+'</p>':'')+
+        '<div class="m-actions"><button class="btn small" data-act="min" data-id="'+id+'">Did the minimum</button><button class="btn small ghost" data-act="full" data-id="'+id+'">Did the full version</button><button class="link" data-act="stuck" data-id="'+id+'">I\'m stuck</button><button class="link" data-act="stuck-full" data-id="'+id+'">I wanna do the full version</button></div>')+
+    '</div></article>';
+  }).join("");
+
+  const pending=S.missions.concat(["alarm"]).filter(id=>SETUP[id]&&!S.setup[id]).slice(0,2);
+  const setupHTML=pending.length?'<section class="card stack"><div class="row" style="justify-content:space-between"><span class="eyebrow">Set up once</span><span class="muted" style="font-size:.85rem">Makes tomorrow easier</span></div>'+
+    pending.map(id=>'<div class="quest"><input type="checkbox" id="setup-'+id+'" data-setup="'+id+'"><label for="setup-'+id+'"><b>'+esc(SETUP[id].t)+'</b><br><span class="muted">'+esc(SETUP[id].d)+'</span>'+
+      (SETUP[id].copy?'<span class="copyline"><code>'+esc(SETUP[id].copy)+'</code><button class="btn small ghost" data-act="copy" data-text="'+esc(SETUP[id].copy)+'">Copy</button></span>':'')+'</label></div>').join("")+'</section>':"";
+
+  const ready=readyForMore();
+  const moreHTML=ready&&S.queue.length?'<section class="card stack"><span class="eyebrow">Ready for one more?</span><p>You finished your floor on '+countIn(7,floorDone)+' of the last 7 days. If it feels easy, add <b>'+M[S.queue[0]].name+'</b>. If it doesn\'t, stay where you are. Both are fine.</p><div class="row"><button class="btn small" data-act="add-next">Add '+M[S.queue[0]].name+'</button><button class="link" data-act="tab" data-tab="path">See the path</button></div></section>':"";
+
+  const t=todayKey();
+  const dots=[];for(let i=13;i>=0;i--){const dk=shiftKey(t,-i);dots.push('<span class="dot'+(showedUp(dk)?' on':'')+(i===0?' today':'')+'" title="'+prettyDay(dk)+(showedUp(dk)?': showed up':'')+'"></span>')}
+
+  const journaled=S.journal.some(j=>j.date===k);
+  return '<div class="stack-lg">'+
+    '<div class="stack"><span class="eyebrow">'+prettyDay(k)+'</span><h2>'+greet+'</h2></div>'+
+    '<div class="dawn">'+dawnSVG(p)+'<div class="dawn-text"><div><div class="eyebrow">Today\'s floor</div><div class="big num">'+n+'<span> / '+tot+'</span></div></div><span class="chip-live num">+'+dayXP(k)+' XP today</span></div></div>'+
+    banner+
+    '<section class="stack">'+missions+'</section>'+
+    moreHTML+setupHTML+
+    '<section class="card stack"><div class="row" style="justify-content:space-between"><span class="eyebrow">Last 14 days</span><span class="num" style="font-weight:600">Showed up '+last7+' of 7</span></div><div class="dots">'+dots.join("")+'</div><p class="muted" style="font-size:.88rem">A filled dot means at least one mission. Empty dots are fine. The goal is more filled dots over time.</p></section>'+
+    (!journaled?'<section class="panel row" style="justify-content:space-between"><div><b>End-of-day check-in</b><br><span class="muted" style="font-size:.9rem">One minute. +'+XP.journal+' XP.</span></div><button class="btn small soft" data-act="tab" data-tab="journal">Check in</button></section>':'')+
+  '</div>';
+}
+
+function readyForMore(){return countIn(7,floorDone)>=5}
+
+function pitem(k,id,text,enabled){
+  const on=planDone(k,id);
+  return '<div class="pitem'+(on?' done':'')+'"><input type="checkbox" id="p-'+k+'-'+id+'" data-plan="'+k+':'+id+'"'+(on?' checked':'')+(enabled?'':' disabled')+'><label for="p-'+k+'-'+id+'">'+esc(text)+'</label></div>';
+}
+function todayPlanHTML(k){
+  const pd=planDay(k);
+  const extras=EXTRAS.filter(x=>k>=x.from);
+  if(!pd&&!extras.length)return "";
+  return '<section class="card stack">'+
+    (pd?'<div class="row" style="justify-content:space-between"><span class="eyebrow">Today\'s plan step</span>'+(pd.delivery?'<span class="ptag">Delivery day</span>':'')+'</div><h3>'+esc(pd.title)+'</h3>'+(pd.note?'<p class="muted" style="font-size:.92rem">'+esc(pd.note)+'</p>':'')+pd.items.map(([id,t])=>pitem(k,id,t,true)).join(""):'')+
+    (extras.length?'<div class="stack" style="gap:8px'+(pd?';border-top:1px solid var(--line);padding-top:12px':'')+'"><div class="row" style="justify-content:space-between"><span class="eyebrow">Optional extras</span><span class="muted" style="font-size:.8rem">+'+XP.plan+' XP each. Skipping is fine.</span></div>'+
+      extras.map(x=>pitem(k,x.id,x.t+'. '+x.d,true)).join("")+'</div>':'')+
+    '<button class="link" data-act="tab" data-tab="plan" style="align-self:flex-start">See the whole plan</button>'+
+  '</section>';
+}
+
+function renderPlan(){
+  const t=todayKey();
+  const cells=PLAN.map(pd=>{
+    const k=pd.date;const [y,m,dd]=k.split("-").map(Number);const wd=new Date(y,m-1,dd).toLocaleDateString(undefined,{weekday:"short"}).slice(0,2);
+    const n=pd.items.filter(([id])=>planDone(k,id)).length;
+    const sh=showedUp(k),fl=floorDone(k);
+    return '<div class="tday'+(k===t?' is-today':'')+'" title="'+prettyDay(k)+'"><span class="wd">'+wd+'</span><span class="dn">'+dd+'</span>'+
+      '<svg viewBox="0 0 12 12" style="width:12px;height:12px"><circle cx="6" cy="6" r="5" style="fill:'+(fl?'var(--done)':'none')+';stroke:'+(sh?'var(--done)':'var(--line)')+'" stroke-width="1.6"/>'+(sh&&!fl?'<path d="M6 1a5 5 0 0 1 0 10z" style="fill:var(--done)"/>':'')+'</svg>'+
+      '<span class="st">'+n+'/'+pd.items.length+'</span>'+
+      '<svg class="box'+(pd.delivery?'':' none')+'" viewBox="0 0 24 24" aria-label="'+(pd.delivery?'Delivery':'')+'" style="fill:none;stroke:currentColor" stroke-width="2"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg></div>';
+  }).join("");
+  const showed=PLAN.filter(pd=>showedUp(pd.date)).length;
+  const steps=PLAN.reduce((a,pd)=>a+pd.items.filter(([id])=>planDone(pd.date,id)).length,0),stepsTot=PLAN.reduce((a,pd)=>a+pd.items.length,0);
+  const ended=t>PLAN[PLAN.length-1].date;
+  const days=PLAN.map(pd=>{
+    const k=pd.date;const past=k<t,isT=k===t,fut=k>t;const [y,m,dd]=k.split("-").map(Number);
+    const mon=new Date(y,m-1,dd).toLocaleDateString(undefined,{month:"short"});
+    return '<div class="pday'+(isT?' is-today':'')+(past?' is-past':'')+'"><div class="pdate"><small>'+mon+'</small><b>'+dd+'</b></div><div class="card stack" style="gap:10px">'+
+      '<div class="row" style="justify-content:space-between"><h3>'+esc(pd.title)+'</h3>'+(pd.delivery?'<span class="ptag">Delivery</span>':pd.optional?'<span class="ptag opt">Optional</span>':isT?'<span class="ptag">Today</span>':'')+'</div>'+
+      (pd.note?'<p class="muted" style="font-size:.9rem">'+esc(pd.note)+'</p>':'')+
+      '<div class="floorline"><i class="'+(showedUp(k)?'on':'')+'"></i>'+(fut?'Your daily missions, minimum counts':floorDone(k)?'All missions done':showedUp(k)?'Showed up':(S.createdAt&&k<keyOf(new Date(S.createdAt)))?'Before you started':isT?'Your daily missions, minimum counts':'Missed. That\'s fine, the next day still works.')+'</div>'+
+      pd.items.map(([id,tx])=>pitem(k,id,tx,!fut)).join("")+
+    '</div></div>';
+  }).join("");
+  return '<div class="stack-lg">'+
+    '<div class="stack"><span class="eyebrow">Oct 22 – Oct 31</span><h2>'+(ended?'This plan is finished.':'Ten days, one small step each.')+'</h2><p class="muted">'+(ended?'Tell Claude "check my progress" and you\'ll build the next stretch together.':'Your daily missions stay the same every day. Each day adds at most one new thing on top, timed to when your deliveries arrive.')+'</p></div>'+
+    '<section class="card stack"><div class="row" style="justify-content:space-between"><span class="eyebrow">Tracker</span><span class="num" style="font-weight:600">Showed up '+showed+' of '+PLAN.length+' · steps '+steps+'/'+stepsTot+'</span></div>'+
+      '<div class="track">'+cells+'</div>'+
+      '<div class="legend"><span><svg viewBox="0 0 12 12" style="width:12px;height:12px"><circle cx="6" cy="6" r="5" style="fill:var(--done);stroke:var(--done)" stroke-width="1.6"/></svg>All missions</span><span><svg viewBox="0 0 12 12" style="width:12px;height:12px"><circle cx="6" cy="6" r="5" style="fill:none;stroke:var(--done)" stroke-width="1.6"/><path d="M6 1a5 5 0 0 1 0 10z" style="fill:var(--done)"/></svg>Showed up</span><span class="num">1/2 = plan steps</span><span><svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:none;stroke:var(--sun-ink)" stroke-width="2"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/></svg>Delivery</span></div></section>'+
+    '<section class="stack">'+days+'</section>'+
+    '<section class="stack"><span class="eyebrow">Guides</span>'+GUIDES.map(g=>'<details class="guide"><summary>'+esc(g.t)+'<small>'+esc(g.when)+'</small></summary><div class="gbody">'+g.body.map(b=>'<p>'+esc(b)+'</p>').join("")+'</div></details>').join("")+'</section>'+
+  '</div>';
+}
+
+function renderJournal(){
+  const k=todayKey();const existing=S.journal.find(j=>j.date===k);
+  const chip=(list,key)=>list.map(([v,l])=>'<button class="chip" data-jchip="'+key+'" data-v="'+v+'" aria-pressed="'+jDraft[key].includes(v)+'">'+esc(l)+'</button>').join("");
+  const since=shiftKey(k,-13);const recent=S.journal.filter(j=>j.date>=since);
+  const counts={};recent.forEach(j=>(j.blocked||[]).forEach(b=>counts[b]=(counts[b]||0)+1));
+  const top=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const label=(list,v)=>(list.find(x=>x[0]===v)||[v,v])[1];
+  const entries=S.journal.slice().sort((a,b)=>b.date<a.date?-1:1).slice(0,20).map(j=>'<div class="entry"><div class="row" style="justify-content:space-between"><b>'+prettyDay(j.date)+'</b><span class="muted num" style="font-size:.85rem">Energy '+(j.energy||"–")+'/5</span></div>'+
+    ((j.helped||[]).length||(j.blocked||[]).length?'<div class="row">'+(j.helped||[]).map(v=>'<span class="tag good">'+esc(label(HELPED,v))+'</span>').join("")+(j.blocked||[]).map(v=>'<span class="tag bad">'+esc(label(BLOCKED,v))+'</span>').join("")+'</div>':'')+
+    (j.note?'<p style="font-size:.95rem">'+esc(j.note)+'</p>':'')+'</div>').join("");
+  return '<div class="stack-lg">'+
+    '<div class="stack"><span class="eyebrow">Journal</span><h2>'+(existing?'Today is checked in.':'How did today go?')+'</h2><p class="muted">This is how we find what gets in the way, so the plan can change instead of you blaming yourself.</p></div>'+
+    '<section class="card stack-lg">'+
+      '<div class="stack"><b>Energy today</b><div class="seg">'+[1,2,3,4,5].map(i=>'<button class="chip num" data-energy="'+i+'" aria-pressed="'+(jDraft.energy===i)+'">'+i+'</button>').join("")+'</div><div class="row muted" style="justify-content:space-between;font-size:.8rem"><span>Empty</span><span>Plenty</span></div></div>'+
+      '<div class="stack"><b>What helped?</b><div class="chips">'+chip(HELPED,"helped")+'</div></div>'+
+      '<div class="stack"><b>What got in the way?</b><div class="chips">'+chip(BLOCKED,"blocked")+'</div></div>'+
+      '<div class="stack"><label for="jnote"><b>Anything else?</b> <span class="muted">Optional</span></label><textarea id="jnote" placeholder="One sentence is plenty.">'+esc(jDraft.note)+'</textarea></div>'+
+      '<button class="btn block" data-act="jsave">'+(existing?'Update today\'s check-in':'Save check-in · +'+XP.journal+' XP')+'</button>'+
+    '</section>'+
+    (top.length?'<section class="card stack"><span class="eyebrow">Patterns, last 14 days</span>'+top.map(([b,c])=>'<div class="stack" style="gap:4px"><div class="row" style="justify-content:space-between"><b>'+esc(label(BLOCKED,b))+'</b><span class="muted num">'+c+'×</span></div><p class="muted" style="font-size:.93rem">Try: '+esc(FIX[b])+'</p></div>').join("")+'</section>':'')+
+    (entries?'<section class="stack"><span class="eyebrow">Past check-ins</span>'+entries+'</section>':'<p class="muted">Your check-ins will show up here. After a few, this page starts showing patterns.</p>')+
+  '</div>';
+}
+
+function renderPath(){
+  const shown14=countIn(14,showedUp);
+  const teeth14=countIn(14,k=>!!(S.days[k]&&S.days[k].done&&S.days[k].done.teeth));
+  const active=S.missions.length;
+  const req=(l,v,goal)=>'<div class="req"><span>'+l+'</span><span class="num muted">'+Math.min(v,goal)+' / '+goal+'</span><div class="bar"><i style="width:'+Math.min(100,v/goal*100)+'%"></i></div></div>';
+  const l2=shown14>=10&&teeth14>=10&&active>=5;
+  const levels=[
+    {n:1,t:"Stabilization",d:"Teeth, washing, clean clothes, food, water, sleep, a livable room."},
+    {n:2,t:"Consistency",d:"Morning and evening routines, reminders, restarting after missed days."},
+    {n:3,t:"Personal development",d:"Exercise, focus, reading, more structured days."},
+    {n:4,t:"Building your future",d:"Online business, skills toward $15K/month, confidence, relationships."}
+  ];
+  const cur=l2?2:1;
+  return '<div class="stack-lg">'+
+    '<div class="stack"><span class="eyebrow">The path</span><h2>You are on Level '+cur+'.</h2><p class="muted">Levels open when your days show you\'re ready. There is no deadline, and going slower is not failing.</p></div>'+
+    levels.map(L=>'<section class="lvl'+(L.n===cur?' now':'')+(L.n>cur?' locked':'')+'"><span class="lvl-n">'+L.n+'</span><div class="card stack"><div class="row" style="justify-content:space-between"><h3>'+L.t+'</h3><span class="eyebrow">'+(L.n<cur?'Cleared':L.n===cur?'Now':'Locked')+'</span></div><p class="muted" style="font-size:.93rem">'+L.d+'</p>'+
+      (L.n===1?'<div class="stack" style="gap:14px">'+req("Showed up, last 14 days",shown14,10)+req("Teeth brushed, last 14 days",teeth14,10)+req("Daily missions active",active,5)+'</div>'+
+        (S.queue.length?'<div class="stack" style="gap:0"><span class="eyebrow" style="margin:6px 0 4px">Coming next</span>'+S.queue.map((id,i)=>'<div class="queue"><span class="row"><span class="m-icon" style="width:34px;height:34px">'+icon(id)+'</span>'+M[id].name+'</span>'+(i===0?'<button class="btn small ghost" data-act="add-next">Add now</button>':'<span class="muted" style="font-size:.85rem">Later</span>')+'</div>').join("")+'</div>'+
+          (!readyForMore()?'<p class="muted" style="font-size:.85rem">Honest advice: adding missions before the current ones feel easy usually makes the whole floor collapse. The app will suggest it when you\'ve finished your floor 5 of 7 days.</p>':''):'')
+      :L.n===2&&l2?'<p><b>Unlocked.</b> Tell Claude "Level 2 unlocked" and you\'ll design your morning and evening routines together.</p>':'')+
+    '</div></section>').join("")+
+  '</div>';
+}
+
+function renderMe(){
+  const b=S.baseline;const lbl=(qid)=>{const q=QUESTIONS.find(x=>x.id===qid);if(!q)return"–";const v=b[qid];if(Array.isArray(v))return v.length?v.map(x=>(q.opts.find(o=>o[0]===x)||[,x])[1]).join(", "):"None picked";return (q.opts.find(o=>o[0]===v)||[,"–"])[1]};
+  const started=S.createdAt?new Date(S.createdAt).toLocaleDateString(undefined,{month:"long",day:"numeric",year:"numeric"}):"";
+  return '<div class="stack-lg">'+
+    '<div class="stack"><span class="eyebrow">Me</span><h2>Your starting point</h2><p class="muted">Recorded '+esc(started)+'. Come back in a month and compare.</p></div>'+
+    '<section class="card stack">'+QUESTIONS.map(q=>'<div class="req" style="grid-template-columns:1fr auto"><span class="muted">'+esc(q.q)+'</span><b style="text-align:right">'+esc(lbl(q.id))+'</b></div>').join("")+
+      '<button class="btn small ghost" data-act="rebase">Retake the baseline</button></section>'+
+    '<section class="card stack"><span class="eyebrow">Support</span><h3>You don\'t have to do this alone.</h3><p>When basic care has been hard for years, there is often a reason underneath it, like depression, ADHD, anxiety, or something physical. That is not a character flaw, and a doctor can help figure it out.</p>'+
+      '<ul class="list"><li>Book a visit with a family doctor or walk-in clinic and say: "I\'ve struggled with basic hygiene and starting tasks for years and I want help."</li><li>Tell one person you trust that you\'re working on this. They don\'t need to fix anything, just check in.</li><li>In Canada, 811 connects you to a nurse in most provinces. If you are ever in crisis, call or text 988.</li></ul></section>'+
+    '<section class="card stack"><span class="eyebrow">Your data</span>'+storageHTML()+
+      '<div class="stack" style="gap:8px"><b>Backup code</b><p class="muted" style="font-size:.9rem">Copy this and paste it to Claude for a check-in, or save it somewhere to restore later.</p><button class="btn small" data-act="backup" style="align-self:flex-start">Copy backup code</button><textarea id="backupOut" readonly hidden style="min-height:70px;font:500 .75rem/1.3 var(--f-mono)"></textarea></div>'+
+      '<div class="stack" style="gap:8px"><label for="restoreIn"><b>Restore from a code</b></label><textarea id="restoreIn" placeholder="Paste a backup code" style="min-height:70px;font:500 .75rem/1.3 var(--f-mono)"></textarea>'+
+      (restorePending?'<p><b>Replace everything on this phone with that backup?</b></p><div class="row"><button class="btn small" data-act="restore-yes">Yes, restore it</button><button class="btn small ghost" data-act="restore-no">Cancel</button></div>':'<button class="btn small ghost" data-act="restore" style="align-self:flex-start">Restore</button>')+'</div>'+
+      (confirmReset?'<p><b>Erase everything?</b> XP, days and journal will be gone for good.</p><div class="row"><button class="btn small" data-act="reset-yes">Yes, erase it</button><button class="btn small ghost" data-act="reset-no">Keep it</button></div>':'<button class="link" data-act="reset" style="align-self:flex-start">Erase all data</button>')+
+    '</section>'+
+  '</div>';
+}
+
+/* ---------- stuck mode ---------- */
+let ov=null;
+function openStuck(id,phase){
+  ov={id,i:0,secs:0,timer:null,phase:phase||"min"};drawStuck();
+}
+const val=(v,k)=>typeof v==="function"?v(k):v;
+function ovSteps(){return ov.phase==="full"?val(FULL[ov.id].steps,todayKey()):M[ov.id].steps}
+function ovTarget(){return ov.phase==="full"?val(FULL[ov.id].target,todayKey()):120}
+function drawStuck(){
+  let el=$("#ov");if(!el){el=document.createElement("div");el.id="ov";el.className="overlay";el.setAttribute("role","dialog");el.setAttribute("aria-modal","true");document.body.appendChild(el)}
+  const m=M[ov.id];const steps=ovSteps();const last=ov.i>=steps.length-1;const full=ov.phase==="full";const tm=Math.round(ovTarget()/60);
+  const mm=String(Math.floor(ov.secs/60)).padStart(1,"0")+":"+String(ov.secs%60).padStart(2,"0");
+  el.innerHTML='<div class="ov-inner"><div class="row" style="justify-content:space-between"><span class="eyebrow">'+m.name+(full?' · full version':' · minimum')+'</span><button class="link" data-ov="close">Close</button></div>'+
+    '<div class="step-dots">'+steps.map((_,i)=>'<i class="'+(i<=ov.i?'on':'')+'"></i>').join("")+'</div>'+
+    '<div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:16px"><span class="eyebrow num">Step '+(ov.i+1)+' of '+steps.length+'</span><p class="step">'+esc(steps[ov.i])+'</p>'+(ov.i===0?'<p class="muted">'+(full?'Same deal. Only this step, nothing after it.':'Don\'t think about the whole thing. Only this.')+'</p>':'')+'</div>'+
+    '<div class="row" style="justify-content:space-between"><span class="timer" aria-label="Timer">'+mm+'</span><button class="btn small ghost" data-ov="timer">'+(ov.timer?'Pause':'Start a '+tm+'-minute timer')+'</button></div>'+
+    (!last?'<button class="btn block" data-ov="next">Done. Next step</button>'
+      :full?'<button class="btn block" data-ov="finishfull">Full version done. Mark it</button>'
+      :'<div class="stack" style="gap:10px"><button class="btn block" data-ov="finish">That counts. Mark the minimum done</button><button class="btn block ghost" data-ov="gofull">I want to keep going: full version</button></div>')+
+  '</div>';
+  el.querySelector(!last?'[data-ov="next"]':full?'[data-ov="finishfull"]':'[data-ov="finish"]').focus();
+}
+function closeStuck(){if(ov&&ov.timer)clearInterval(ov.timer);ov=null;const el=$("#ov");if(el)el.remove()}
+
+/* ---------- actions ---------- */
+function mark(id,lvl){
+  const k=todayKey();const before=dayXP(k);
+  const d=S.days[k]||(S.days[k]={done:{},set:S.missions.slice()});
+  const wasShown=Object.keys(d.done).length>0;
+  d.done[id]=lvl;save();
+  const gain=dayXP(k)-before;
+  const allDone=d.set.every(x=>d.done[x]);
+  toast(allDone?"Floor complete. +"+gain+" XP":!wasShown?"You showed up today. +"+gain+" XP":"+"+gain+" XP");
+  render();
+}
+document.addEventListener("click",e=>{
+  const ovb=e.target.closest("[data-ov]");
+  if(ovb){const a=ovb.dataset.ov;
+    if(a==="close")closeStuck();
+    else if(a==="next"){ov.i++;drawStuck()}
+    else if(a==="finish"){const id=ov.id;closeStuck();mark(id,"min")}
+    else if(a==="finishfull"){const id=ov.id;closeStuck();mark(id,"full")}
+    else if(a==="gofull"){const id=ov.id;const d=S.days[todayKey()];if(!(d&&d.done&&d.done[id])){S.days[todayKey()]=d||{done:{},set:S.missions.slice()};S.days[todayKey()].done[id]="min";save();render()}if(ov.timer)clearInterval(ov.timer);ov={id,i:0,secs:0,timer:null,phase:"full"};toast("Minimum banked. Now the full version.");drawStuck()}
+    else if(a==="timer"){if(ov.timer){clearInterval(ov.timer);ov.timer=null}else{ov.timer=setInterval(()=>{ov.secs++;const t=document.querySelector(".timer");if(t)t.textContent=Math.floor(ov.secs/60)+":"+String(ov.secs%60).padStart(2,"0");if(ov.secs>=ovTarget()){clearInterval(ov.timer);ov.timer=null;toast(ovTarget()===120?"Two minutes. You can stop now, or keep going.":"Time's up. You can stop here.");drawStuck()}},1000)}drawStuck()}
+    return}
+  const tb=e.target.closest(".tab");
+  if(tb){tab=tb.dataset.tab;try{localStorage.setItem(LS+"-tab",tab)}catch(_){}render();window.scrollTo(0,0);return}
+  const ans=e.target.closest("[data-ans]");
+  if(ans){const q=QUESTIONS[obStep];const v=ans.dataset.ans;
+    if(q.multi){const cur=obAnswers[q.id]||[];obAnswers[q.id]=cur.includes(v)?cur.filter(x=>x!==v):cur.concat(v);render()}
+    else{obAnswers[q.id]=v;render();setTimeout(()=>{if(obStep<QUESTIONS.length-1){obStep++}else{obIntro=true}render();window.scrollTo(0,0)},220)}
+    return}
+  const en=e.target.closest("[data-energy]");if(en){jDraft.energy=+en.dataset.energy;keepNote();render();return}
+  const jc=e.target.closest("[data-jchip]");if(jc){const key=jc.dataset.jchip,v=jc.dataset.v;jDraft[key]=jDraft[key].includes(v)?jDraft[key].filter(x=>x!==v):jDraft[key].concat(v);keepNote();render();return}
+  const b=e.target.closest("[data-act]");if(!b)return;
+  const a=b.dataset.act,id=b.dataset.id;
+  if(a==="ob-back"){obStep=Math.max(0,obStep-1);render()}
+  else if(a==="ob-next"){if(!obAnswers[QUESTIONS[obStep].id])obAnswers[QUESTIONS[obStep].id]=[];if(obStep<QUESTIONS.length-1)obStep++;else obIntro=true;render();window.scrollTo(0,0)}
+  else if(a==="ob-finish"){const plan=buildPlan(obAnswers);const keep=S.onboarded;S.baseline=Object.assign({},obAnswers);if(!keep){S.missions=plan.missions;S.queue=plan.queue;S.createdAt=Date.now()}S.onboarded=true;obIntro=false;tab="today";save();render();window.scrollTo(0,0)}
+  else if(a==="min"||a==="full")mark(id,a);
+  else if(a==="undo"){const d=S.days[todayKey()];if(d){delete d.done[id];save();render()}}
+  else if(a==="stuck")openStuck(id);
+  else if(a==="stuck-full")openStuck(id,"full");
+  else if(a==="tab"){tab=b.dataset.tab;render();window.scrollTo(0,0)}
+  else if(a==="add-next"){const nx=S.queue.shift();if(nx){S.missions.push(nx);const d=S.days[todayKey()];if(d&&!d.set.includes(nx))d.set.push(nx);save();toast(M[nx].name+" added");render()}}
+  else if(a==="copy"){const txt=b.dataset.text;const ok=()=>toast("Copied");const fail=()=>{const c=b.parentElement.querySelector("code");const r=document.createRange();r.selectNodeContents(c);const s=getSelection();s.removeAllRanges();s.addRange(r);toast("Selected. Copy it from here.")};try{navigator.clipboard.writeText(txt).then(ok,fail)}catch(_){fail()}}
+  else if(a==="jsave"){keepNote();const k=todayKey();const entry={date:k,energy:jDraft.energy,helped:jDraft.helped.slice(),blocked:jDraft.blocked.slice(),note:jDraft.note.trim(),at:Date.now()};const i=S.journal.findIndex(j=>j.date===k);if(i>=0)S.journal[i]=entry;else S.journal.push(entry);save();toast(i>=0?"Check-in updated":"Checked in. +"+XP.journal+" XP");render()}
+  else if(a==="rebase"){obAnswers=Object.assign({},S.baseline);obStep=0;obIntro=false;obRetake=true;render();window.scrollTo(0,0)}
+  else if(a==="reset"){confirmReset=true;render()}
+  else if(a==="reset-no"){confirmReset=false;render()}
+  else if(a==="restore-ob"){const raw=($("#restoreOb").value||"").trim();try{const p=JSON.parse(decodeURIComponent(escape(atob(raw.replace(/^Z1:/,"")))));if(!p||p.v!==1)throw 0;S=Object.assign(blank(),p);save();loadDraft();tab="today";toast("Progress restored");render()}catch(_){toast("That code doesn't look right. Copy the whole thing and try again.")}}
+  else if(a==="backup"){const code="Z1:"+btoa(unescape(encodeURIComponent(JSON.stringify(S))));const out=$("#backupOut");out.value=code;out.hidden=false;const sel=()=>{out.focus();out.select();toast("Selected. Copy it from the box.")};try{navigator.clipboard.writeText(code).then(()=>toast("Backup code copied"),sel)}catch(_){sel()}}
+  else if(a==="restore"){const raw=($("#restoreIn").value||"").trim();try{const p=JSON.parse(decodeURIComponent(escape(atob(raw.replace(/^Z1:/,"")))));if(!p||p.v!==1)throw 0;restorePending=p;restoreText=raw;render();const r=$("#restoreIn");if(r)r.value=restoreText}catch(_){toast("That code doesn't look right. Copy the whole thing and try again.")}}
+  else if(a==="restore-no"){restorePending=null;render()}
+  else if(a==="restore-yes"){S=Object.assign(blank(),restorePending);restorePending=null;save();loadDraft();toast("Restored");tab="today";render()}
+  else if(a==="reset-yes"){S=blank();obAnswers={};obStep=0;confirmReset=false;save();render()}
+});
+let obRetake=false;
+/* retaking the baseline: show questions without losing progress */
+const _render=render;
+render=function(){if(obRetake){$("#tabs").hidden=true;$("#app").innerHTML=obIntro?renderRetakeDone():renderOnboarding();return}_render()};
+function renderRetakeDone(){return '<div class="ob stack-lg"><div class="stack"><span class="eyebrow">Baseline updated</span><h1>Got it. Your missions and progress stay as they are.</h1><p class="muted">Compare it with how things were when you started, and tell Claude what changed.</p></div><button class="btn block" data-act="retake-done">Back to today</button></div>'}
+document.addEventListener("click",e=>{const b=e.target.closest('[data-act="retake-done"]');if(b){S.baseline=Object.assign({},obAnswers);obRetake=false;obIntro=false;tab="today";save();render()}});
+document.addEventListener("change",e=>{const pc=e.target.closest("[data-plan]");if(pc){S.plan=S.plan||{};if(pc.checked)S.plan[pc.dataset.plan]=Date.now();else delete S.plan[pc.dataset.plan];save();if(pc.checked)toast("+"+XP.plan+" XP");setTimeout(render,350);return}
+  const c=e.target.closest("[data-setup]");if(c&&c.checked){S.setup[c.dataset.setup]=Date.now();save();toast("Set up. Future you says thanks.");setTimeout(render,500)}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&ov)closeStuck()});
+function keepNote(){const n=$("#jnote");if(n)jDraft.note=n.value}
+function loadDraft(){const j=S.journal.find(x=>x.date===todayKey());jDraft=j?{energy:j.energy||0,helped:(j.helped||[]).slice(),blocked:(j.blocked||[]).slice(),note:j.note||""}:{energy:0,helped:[],blocked:[],note:""}}
+loadDraft();
+
+
+render();
+connectDb().then(loadDraft);
+/* refresh at the 4am rollover or when coming back to the tab */
+let lastKey=todayKey();
+setInterval(()=>{if(todayKey()!==lastKey){lastKey=todayKey();loadDraft();render()}},60000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&todayKey()!==lastKey){lastKey=todayKey();loadDraft();render()}});
+})();
+</script>
+</body>
+</html>
