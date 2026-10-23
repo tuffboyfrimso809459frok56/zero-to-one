@@ -359,10 +359,10 @@ const BIZ_START = {
     min:"Open your shop page and scroll through it once.",full:"Write down 3 things that look unfinished or confusing.",
     steps:["Open Etsy.","Tap your shop name to see your shop page.","Scroll slowly through everything, like a stranger would.","Done. You've seen what buyers see."],
     fsteps:["Open your shop page.","Scroll through it like a stranger who has never heard of you.","Open 2 of your listings.","Write down 3 things that look unfinished, empty or confusing.","Done. That list is your to-do for the next few days."]},
-  "s-basics":{name:"Shop basics",tmin:10,tfull:30,
-    min:"Add a shop icon (a simple logo or image).",full:"Add a shop icon, a banner, and a short About section.",
-    steps:["Open Etsy, then Shop Manager.","Tap your shop name, then Edit shop.","Tap the shop icon spot and upload a simple image or logo.","Save. Done."],
-    fsteps:["Open Shop Manager, then Edit shop.","Upload a shop icon: a simple logo or image.","Upload a banner, the wide image at the top.","Write 2 or 3 sentences in About: who the products are for and what they help with.","Save. Done."]},
+  "s-basics":{name:"Shop About section",tmin:10,tfull:30,
+    min:"Write a short About section: who your products are for and what they help with.",full:"Write the About section and add a banner, the wide image at the top of your shop.",
+    steps:["Tap Copy AI prompt below and paste it into Claude.","Open Etsy, then Shop Manager, then Edit shop.","Find the About section.","Paste in what Claude wrote. Change anything that doesn't sound like you.","Save. Done."],
+    fsteps:["Copy the AI prompt and paste it into Claude.","Open Shop Manager, then Edit shop.","Paste the About section in.","Make a simple banner in Canva using the tagline Claude wrote, and upload it.","Save. Done."]},
   "s-title":{name:"Fix your favourite listing's title",tmin:10,tfull:30,
     min:"Make the title start with what a buyer would type into search.",full:"Fix the title and fill in all 13 tags.",
     steps:["Open the listing you like most.","Tap Edit.","Think: what would a buyer type to find this? For example \"Freelancer Income Tracker\".","Make the title start with those words.","Save. Done."],
@@ -390,6 +390,30 @@ const BIZ_START = {
 };
 const START_ORDER = Object.keys(BIZ_START);
 Object.assign(BIZ, BIZ_START);
+
+/* AI help per shop task: [minutes without AI, minutes with AI], and a prompt to paste into Claude. */
+const AI = {
+  "s-look":{t:[15,8],p:"I just opened my Etsy shop, ZibblyShop. I sell digital templates that help freelancers track their income. I'll attach screenshots of my shop page. Pretend you're a first-time buyer. Tell me the 3 things that look most unfinished or confusing, and how to fix each one in under 10 minutes. Use simple words."},
+  "s-basics":{t:[30,10],p:"Write an Etsy shop About section (3 short sentences) and a banner tagline (under 8 words) for my shop ZibblyShop. I sell digital templates that help freelancers track income. Friendly, simple words. No hype."},
+  "s-title":{t:[30,5],p:"Write an Etsy listing title and 13 tags for this product: [describe your product in one sentence]. The title must start with the words a buyer would search for. Each tag must be 20 characters or less. Give me the title and tags ready to copy."},
+  "s-photos":{t:[30,20],p:"For each of these Etsy listings, suggest 3 to 5 words to put on the first photo so a buyer understands what it is in 2 seconds: [list your product names]."},
+  "s-share":{t:[15,5],p:"Write a short, friendly message (under 40 words) I can text to friends and family about my new Etsy shop ZibblyShop. It sells templates that help freelancers track income. Ask them to tap the heart on a listing they like."},
+  "s-pinterest":{t:[20,12],p:"Write a Pinterest business profile bio (under 160 characters) and 3 board names for my shop ZibblyShop, which sells digital templates for freelancers."},
+  "s-pin":{t:[20,8],p:"Write 3 Pinterest pins for these Etsy listings: [paste 3 listing titles]. For each one give a title under 100 characters and a description under 300 characters using words freelancers search for."},
+  "b-check":{t:[10,4],p:"Help me reply to this Etsy buyer message. Keep it short, friendly and helpful: [paste the message]."},
+  "b-stats":{t:[20,10],p:"Here are my Etsy stats for the last 30 days. I'll attach a screenshot. Which listing should I improve first, and why? Answer in 3 short bullet points."},
+  "b-list":{t:[30,5],p:"Write an Etsy listing title and 13 tags for this product: [describe your product in one sentence]. The title must start with the words a buyer would search for. Each tag must be 20 characters or less."},
+  "b-bundle":{t:[45,20],p:"I sell these digital products on Etsy: [list 3 or 4 products and their prices]. Write a bundle listing: a title, a 4-sentence description, 13 tags (20 characters max each), and a suggested bundle price."},
+  "b-pins":{t:[20,8],p:"Write 3 Pinterest pins for these Etsy listings: [paste 3 listing titles]. For each one give a title under 100 characters and a description under 300 characters using words freelancers search for."}
+};
+function aiSaved(){let m=0;Object.keys(S.aiUsed||{}).forEach(key=>{const id=key.slice(11);if(S.biz&&S.biz[key]&&AI[id])m+=AI[id].t[0]-AI[id].t[1]});return m}
+function fmtMin(m){return m>=60?Math.floor(m/60)+' h '+(m%60)+' min':m+' min'}
+function aiHTML(id,k){
+  const a=AI[id];if(!a)return "";const used=S.aiUsed&&S.aiUsed[k+":"+id];
+  return '<div class="panel stack" style="gap:8px;padding:12px"><div class="row" style="justify-content:space-between"><b style="font-size:.9rem">AI does the writing</b><span class="muted num" style="font-size:.8rem">Without AI ~'+a.t[0]+' min · With AI ~'+a.t[1]+' min</span></div>'+
+    '<button class="btn small soft" data-act="aiprompt" data-id="'+id+'" style="align-self:flex-start">'+(used?'Prompt copied. Copy again':'Copy AI prompt')+'</button>'+
+    (used?'<textarea readonly style="min-height:80px;font-size:.82rem">'+esc(a.p)+'</textarea><p class="muted" style="font-size:.82rem">Paste it into Claude, fill in anything in [brackets], then paste the answer into Etsy or Pinterest.</p>':'')+'</div>';
+}
 function bizEverDone(id){return Object.keys(S.biz||{}).some(bk=>S.biz[bk]&&bk.slice(11)===id)}
 function startStepToday(k){
   const doneToday=START_ORDER.find(id=>S.biz&&S.biz[k+":"+id]);if(doneToday)return doneToday;
@@ -474,7 +498,7 @@ function prettyDay(k){const [y,m,d]=k.split("-").map(Number);return new Date(y,m
 
 /* ---------- state ---------- */
 const LS="zero-to-one-v1";
-function blank(){return {v:1,onboarded:false,baseline:{},missions:[],queue:[],setup:{},days:{},journal:[],plan:{},biz:{},createdAt:Date.now(),updatedAt:0}}
+function blank(){return {v:1,onboarded:false,baseline:{},missions:[],queue:[],setup:{},days:{},journal:[],plan:{},biz:{},aiUsed:{},createdAt:Date.now(),updatedAt:0}}
 let S=blank();
 try{const raw=localStorage.getItem(LS);if(raw){const p=JSON.parse(raw);if(p&&p.v===1)S=Object.assign(blank(),p)}}catch(e){}
 let db=null, dbRef=null, dbState="pending", saveTimer=null;
@@ -571,7 +595,7 @@ function renderOnboarding(){
   const q=QUESTIONS[obStep];const sel=obAnswers[q.id];
   const optHTML=q.opts.map(([v,l])=>{const on=q.multi?(sel||[]).includes(v):sel===v;return '<button class="opt" data-ans="'+v+'" aria-pressed="'+on+'">'+esc(l)+(on?'<svg class="check" viewBox="0 0 24 24" style="fill:none;stroke:var(--sun-ink)" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>':'')+'</button>'}).join("");
   return '<div class="ob">'+
-    (obStep===0?'<div class="stack"><div class="mark"><i>0→1</i>Zero to One</div><p class="muted">Before anything else, a quick check of where you are today. Nine short questions, one at a time. Your answers decide your first three missions.</p></div>'+(obRetake?'':'<details class="guide"><summary>Have a backup code?</summary><div class="gbody"><textarea id="restoreOb" placeholder="Paste your backup code" style="min-height:70px;font:500 .75rem/1.3 var(--f-mono)"></textarea><span class="muted" style="font-size:.78rem">App version 5</span><button class="btn small" data-act="restore-ob" style="align-self:flex-start">Restore my progress</button></div></details>'):'')+
+    (obStep===0?'<div class="stack"><div class="mark"><i>0→1</i>Zero to One</div><p class="muted">Before anything else, a quick check of where you are today. Nine short questions, one at a time. Your answers decide your first three missions.</p></div>'+(obRetake?'':'<details class="guide"><summary>Have a backup code?</summary><div class="gbody"><textarea id="restoreOb" placeholder="Paste your backup code" style="min-height:70px;font:500 .75rem/1.3 var(--f-mono)"></textarea><span class="muted" style="font-size:.78rem">App version 6</span><button class="btn small" data-act="restore-ob" style="align-self:flex-start">Restore my progress</button></div></details>'):'')+
     '<div class="stack"><div class="row" style="justify-content:space-between"><span class="eyebrow num">Baseline · '+(obStep+1)+' of '+QUESTIONS.length+'</span>'+(obStep>0?'<button class="link" data-act="ob-back">Back</button>':'')+'</div><div class="ob-bar"><i style="width:'+((obStep)/QUESTIONS.length*100)+'%"></i></div></div>'+
     '<div class="stack"><h1 class="ob-q">'+esc(q.q)+'</h1>'+(q.sub?'<p class="muted">'+esc(q.sub)+'</p>':'')+'</div>'+
     '<div class="opts">'+optHTML+'</div>'+
@@ -666,12 +690,12 @@ function bizHTML(k){
   const rows=ids.map(id=>{const b=BIZ[id];const st=bizDone(k,id);const open=b.always||unlocked;
     return '<article class="mission'+(st?' is-done':'')+'"'+(open||st?'':' style="opacity:.6"')+'><div class="m-icon">'+icon("biz")+'</div><div class="m-body">'+
       '<div class="m-head"><h3>'+esc(b.name)+'</h3><span class="m-xp num">+'+XP.bizMin+' / +'+XP.bizFull+'</span></div>'+
-      (st?'<div class="m-done"><svg class="check" viewBox="0 0 24 24" style="fill:none;stroke:currentColor" stroke-width="2.6"><path d="M5 12l5 5 9-10"/></svg>'+(st==="full"?"Full version done":"Minimum done. It counts.")+'</div><div class="m-actions">'+(st==="min"?'<button class="btn small soft" data-act="bfull" data-id="'+id+'">I did the full version too</button>':'')+'<button class="link" data-act="bundo" data-id="'+id+'">Undo</button></div>'
-      :'<p class="m-min"><b>Minimum:</b> '+esc(b.min)+'</p><p class="m-anchor"><b>Full:</b> '+esc(b.full)+'</p>'+timeLine(id,k)+
+      (st?'<div class="m-done"><svg class="check" viewBox="0 0 24 24" style="fill:none;stroke:currentColor" stroke-width="2.6"><path d="M5 12l5 5 9-10"/></svg>'+(st==="full"?"Full version done":"Minimum done. It counts.")+(S.aiUsed&&S.aiUsed[k+":"+id]&&AI[id]?' · AI saved '+(AI[id].t[0]-AI[id].t[1])+' min':'')+'</div><div class="m-actions">'+(st==="min"?'<button class="btn small soft" data-act="bfull" data-id="'+id+'">I did the full version too</button>':'')+'<button class="link" data-act="bundo" data-id="'+id+'">Undo</button></div>'
+      :'<p class="m-min"><b>Minimum:</b> '+esc(b.min)+'</p><p class="m-anchor"><b>Full:</b> '+esc(b.full)+'</p>'+timeLine(id,k)+((open)?aiHTML(id,k):'')+
         (open?'<div class="m-actions"><button class="btn small" data-act="bmin" data-id="'+id+'">Did the minimum</button><button class="btn small ghost" data-act="bfull" data-id="'+id+'">Did the full version</button><button class="link" data-act="stuck" data-id="'+id+'">I\'m stuck</button><button class="link" data-act="stuck-full" data-id="'+id+'">I wanna do the full version</button></div>'
           :'<p class="m-anchor"><b>Unlocks after your missions.</b> Minimums count.</p>'))+
     '</div></article>'}).join("");
-  return '<section class="stack"><div class="row" style="justify-content:space-between;margin-top:8px"><span class="eyebrow">Etsy shop'+(BIZ_START[ids[1]]?' · Start-up step '+(START_ORDER.indexOf(ids[1])+1)+' of '+START_ORDER.length:'')+'</span><span class="muted num" style="font-size:.85rem">about '+t[0]+'–'+t[1]+' min</span></div>'+rows+
+  return '<section class="stack"><div class="row" style="justify-content:space-between;margin-top:8px"><span class="eyebrow">Etsy shop'+(BIZ_START[ids[1]]?' · Start-up step '+(START_ORDER.indexOf(ids[1])+1)+' of '+START_ORDER.length:'')+'</span><span class="muted num" style="font-size:.85rem">about '+t[0]+'–'+t[1]+' min</span></div>'+(aiSaved()?'<p class="num" style="font-size:.9rem;color:var(--done);font-weight:600">AI has saved you '+fmtMin(aiSaved())+' so far</p>':'')+rows+
     (BIZ_START[ids[1]]?'<p class="muted" style="font-size:.9rem">One start-up step a day. When all '+START_ORDER.length+' are done, a simple weekly routine takes over.</p>':'')+(ids.length===1?'<p class="muted" style="font-size:.9rem">No shop task today. Rest days are part of the plan, so you don\'t burn out.</p>':'')+'</section>';
 }
 function markBiz(id,lvl){const k=todayKey();S.biz=S.biz||{};const before=dayXP(k);S.biz[k+":"+id]=lvl;save();toast("+"+(dayXP(k)-before)+" XP");render()}
@@ -785,6 +809,7 @@ function renderMe(){
       '<button class="btn small ghost" data-act="rebase">Retake the baseline</button></section>'+
     '<section class="card stack"><span class="eyebrow">Support</span><h3>You don\'t have to do this alone.</h3><p>When basic care has been hard for years, there is often a reason underneath it, like depression, ADHD, anxiety, or something physical. That is not a character flaw, and a doctor can help figure it out.</p>'+
       '<ul class="list"><li>Book a visit with a family doctor or walk-in clinic and say: "I\'ve struggled with basic hygiene and starting tasks for years and I want help."</li><li>Tell one person you trust that you\'re working on this. They don\'t need to fix anything, just check in.</li><li>In Canada, 811 connects you to a nurse in most provinces. If you are ever in crisis, call or text 988.</li></ul></section>'+
+    '<section class="card stack"><span class="eyebrow">AI time saved</span><p class="num" style="font-size:1.6rem;font-weight:800;font-family:var(--f-display)">'+fmtMin(aiSaved())+'</p><p class="muted" style="font-size:.9rem">Counted when you copy a task\'s AI prompt and then finish that task.</p></section>'+
     '<section class="card stack"><span class="eyebrow">Your data</span>'+storageHTML()+
       '<div class="stack" style="gap:8px"><b>Backup code</b><p class="muted" style="font-size:.9rem">Copy this and paste it to Claude for a check-in, or save it somewhere to restore later.</p><button class="btn small" data-act="backup" style="align-self:flex-start">Copy backup code</button><textarea id="backupOut" readonly hidden style="min-height:70px;font:500 .75rem/1.3 var(--f-mono)"></textarea></div>'+
       '<div class="stack" style="gap:8px"><label for="restoreIn"><b>Restore from a code</b></label><textarea id="restoreIn" placeholder="Paste a backup code" style="min-height:70px;font:500 .75rem/1.3 var(--f-mono)"></textarea>'+
@@ -855,6 +880,7 @@ document.addEventListener("click",e=>{
   else if(a==="ob-finish"){const plan=buildPlan(obAnswers);const keep=S.onboarded;S.baseline=Object.assign({},obAnswers);if(!keep){S.missions=plan.missions;S.queue=plan.queue;S.createdAt=Date.now()}S.onboarded=true;obIntro=false;tab="today";save();render();window.scrollTo(0,0)}
   else if(a==="min"||a==="full")mark(id,a);
   else if(a==="undo"){const d=S.days[todayKey()];if(d){delete d.done[id];save();render()}}
+  else if(a==="aiprompt"){const k=todayKey();S.aiUsed=S.aiUsed||{};S.aiUsed[k+":"+id]=1;save();const txt=AI[id].p;const ok=()=>toast("Copied. Paste it into Claude.");const fail=()=>toast("Select the text in the box and copy it.");try{navigator.clipboard.writeText(txt).then(ok,fail)}catch(_){fail()}render()}
   else if(a==="bmin"||a==="bfull")markBiz(id,a==="bmin"?"min":"full");
   else if(a==="bundo"){if(S.biz){delete S.biz[todayKey()+":"+id];save();render()}}
   else if(a==="stuck")openStuck(id);
