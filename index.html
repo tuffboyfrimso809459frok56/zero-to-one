@@ -243,6 +243,7 @@ html,body{overscroll-behavior-y:none}
 
 /* ---------- content ---------- */
 const ICONS = {
+  biz:'<path d="M4 8h16l-1.5 12h-13z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
   teeth:'<path d="M7 3c-2.5 0-4 2-4 4.5 0 3 1.5 4 2 7.5.4 3 1 6 2.5 6s1.6-4 2.5-5.5c.5-.8 1.5-.8 2 0 .9 1.5 1 5.5 2.5 5.5s2.1-3 2.5-6c.5-3.5 2-4.5 2-7.5C21 5 19.5 3 17 3c-2 0-3 1-5 1S9 3 7 3z"/>',
   water:'<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/><path d="M9 15a3 3 0 0 0 3 3"/>',
   food:'<path d="M3 11h18a9 9 0 0 1-18 0z"/><path d="M8 7c0-2 2-2 2-4M13 7c0-2 2-2 2-4"/>',
@@ -322,7 +323,38 @@ const FIX = {
   mood:"Low-mood days count with one mission. If your mood is low most days for two weeks or more, talk to a doctor."
 };
 const RANKS = [[0,"Zero"],[60,"Flicker"],[180,"Ember"],[400,"Spark"],[750,"Kindling"],[1200,"Flame"],[1800,"Torch"],[2600,"Beacon"],[3600,"Lighthouse"],[5000,"One"]];
-const XP = {min:10, full:15, showed:10, comeback:15, floor:10, journal:5, plan:5};
+const XP = {min:10, full:15, showed:10, comeback:15, floor:10, journal:5, plan:5, bizMin:5, bizFull:8};
+
+/* Rough minutes for each mission: [minimum, full] */
+const TIMES = {teeth:[1,3],wash:[3,10],food:[2,20],water:[1,4],clothes:[2,5],space:[3,10],sleep:[1,10]};
+function mTime(id,k){const t=(BIZ[id]?[BIZ[id].tmin,BIZ[id].tfull]:TIMES[id]||[2,10]).slice();if(id==="wash"&&hairDay(k))t[1]=15;return t}
+
+/* Etsy shop track. Business time comes after missions; checking orders is always open. */
+const BIZ = {
+  "b-check":{name:"Check orders and messages",tmin:2,tfull:10,always:true,
+    min:"Open Etsy and look at new orders and messages.",full:"Reply to every message and send anything a buyer is waiting on.",
+    steps:["Open the Etsy app.","Tap Shop Manager.","Look at Orders. Anything new?","Look at Messages. Anything new? Done."],
+    fsteps:["Open Etsy, then Shop Manager.","Open each new message.","Reply to each one. Short and friendly is fine.","If anyone is waiting on a file, send it.","Done. Every buyer is looked after."]},
+  "b-stats":{name:"Check your stats",tmin:5,tfull:20,
+    min:"Find which listing got the most views in the last 30 days.",full:"Write down views, favourites and orders for your top 5 listings.",
+    steps:["Open Etsy, then Shop Manager, then Stats.","Set the date range to the last 30 days.","Scroll to Listings. Which one has the most views?","Remember that one. Done."],
+    fsteps:["Open Shop Manager, then Stats, last 30 days.","Scroll to the Listings section.","Write down your top 5 listings.","Next to each one, write its views, favourites and orders.","Circle the one with lots of views but few sales. That's the listing to fix tomorrow. Done."]},
+  "b-list":{name:"Improve one listing",tmin:10,tfull:30,
+    min:"Rewrite the title of one listing so it starts with what buyers search for.",full:"Fix the title, all 13 tags and the first photo of one listing.",
+    steps:["Open the listing you circled, or your top one.","Tap Edit.","Read the title. Does it start with what a buyer would search, like \"Freelancer Income Tracker\"?","Rewrite the first few words so it does.","Save. Done."],
+    fsteps:["Open the listing and tap Edit.","Title: start with the main search phrase, then add 1 or 2 more phrases buyers might type.","Tags: use all 13. Each one is a phrase a buyer would search, like \"freelance tracker\" or \"income spreadsheet\".","First photo: it should show the product clearly, with a few words saying what it is.","Save. Done."]},
+  "b-bundle":{name:"Listing or bundle day",tmin:10,tfull:45,
+    min:"Rewrite the title of a different listing.",full:"Make a bundle of 3 or 4 products that go together and list it.",
+    steps:["Open a listing you haven't fixed yet.","Tap Edit.","Rewrite the first few words of the title so they match what buyers search.","Save. Done."],
+    fsteps:["Pick 3 or 4 products that go together.","Open your best listing and use Copy listing.","Title it as a bundle, like \"Freelancer Business Bundle: Income, Expense and Invoice Trackers\".","Upload all the product files.","Price it lower than buying them separately, but higher than any one alone.","Make a first photo that shows all of them together.","Publish. Done."]},
+  "b-pins":{name:"Pinterest",tmin:5,tfull:20,
+    min:"Post 1 pin for your best seller.",full:"Post 3 pins, each linking to a different listing.",
+    steps:["Open Pinterest.","Tap the plus, then Pin.","Use your best seller's first photo.","Give it a clear title and paste the Etsy link.","Publish. Done."],
+    fsteps:["Open Pinterest.","Make a pin for listing 1: photo, clear title, Etsy link.","Make a pin for listing 2.","Make a pin for listing 3.","Put them on a board with a clear name, like \"Freelancer Templates\". Done."]}
+};
+const BIZ_DAY = {1:"b-stats",2:"b-list",3:"b-bundle",4:"b-pins"};
+function bizToday(k){const [y,m,d]=k.split("-").map(Number);const wd=new Date(y,m-1,d).getDay();return ["b-check"].concat(BIZ_DAY[wd]?[BIZ_DAY[wd]]:[])}
+function bizDone(k,id){return S.biz&&S.biz[k+":"+id]}
 
 /* Oct 22 to Oct 31 plan, built around deliveries. Each day adds at most one new thing. */
 const PLAN = [
@@ -386,6 +418,7 @@ const GUIDES = [
     "Do one set of 3 to 5 and stop while it still feels easy. Stop if you feel sharp pain in your wrists or shoulders, as opposed to muscles working. If you have an injury or health condition, check with a doctor first.",
     "A real strength plan comes later, built with Claude once your daily missions hold steady."]}
 ];
+Object.keys(BIZ).forEach(id=>{const b=BIZ[id];M[id]={name:b.name,min:b.min,full:b.full,steps:b.steps};FULL[id]={target:b.tfull*60,steps:b.fsteps}});
 function planDay(k){return PLAN.find(p=>p.date===k)}
 function planDone(k,id){return !!(S.plan&&S.plan[k+":"+id])}
 
@@ -398,7 +431,7 @@ function prettyDay(k){const [y,m,d]=k.split("-").map(Number);return new Date(y,m
 
 /* ---------- state ---------- */
 const LS="zero-to-one-v1";
-function blank(){return {v:1,onboarded:false,baseline:{},missions:[],queue:[],setup:{},days:{},journal:[],plan:{},createdAt:Date.now(),updatedAt:0}}
+function blank(){return {v:1,onboarded:false,baseline:{},missions:[],queue:[],setup:{},days:{},journal:[],plan:{},biz:{},createdAt:Date.now(),updatedAt:0}}
 let S=blank();
 try{const raw=localStorage.getItem(LS);if(raw){const p=JSON.parse(raw);if(p&&p.v===1)S=Object.assign(blank(),p)}}catch(e){}
 let db=null, dbRef=null, dbState="pending", saveTimer=null;
@@ -435,9 +468,10 @@ function dayXP(k){
     const set=d.set||[];if(set.length&&set.every(id=>done[id]))x+=XP.floor}
   if(S.journal.some(j=>j.date===k))x+=XP.journal;
   Object.keys(S.plan||{}).forEach(pk=>{if(S.plan[pk]&&pk.slice(0,10)===k)x+=XP.plan});
+  Object.keys(S.biz||{}).forEach(bk=>{if(S.biz[bk]&&bk.slice(0,10)===k)x+=S.biz[bk]==="full"?XP.bizFull:XP.bizMin});
   return x;
 }
-function totalXP(){const ks=new Set(Object.keys(S.days).concat(S.journal.map(j=>j.date),Object.keys(S.plan||{}).map(pk=>pk.slice(0,10))));let t=0;ks.forEach(k=>t+=dayXP(k));return t}
+function totalXP(){const ks=new Set(Object.keys(S.days).concat(S.journal.map(j=>j.date),Object.keys(S.plan||{}).map(pk=>pk.slice(0,10)),Object.keys(S.biz||{}).map(bk=>bk.slice(0,10))));let t=0;ks.forEach(k=>t+=dayXP(k));return t}
 function rankOf(xp){let i=0;RANKS.forEach((r,j)=>{if(xp>=r[0])i=j});const cur=RANKS[i],nxt=RANKS[i+1];return {name:cur[1],idx:i,from:cur[0],to:nxt?nxt[0]:cur[0],next:nxt?nxt[1]:null}}
 function countIn(n,pred){const t=todayKey();let c=0;for(let i=0;i<n;i++){if(pred(shiftKey(t,-i)))c++}return c}
 function floorDone(k){const d=S.days[k];if(!d)return false;const set=d.set||[];return set.length>0&&set.every(id=>d.done&&d.done[id])}
@@ -494,7 +528,7 @@ function renderOnboarding(){
   const q=QUESTIONS[obStep];const sel=obAnswers[q.id];
   const optHTML=q.opts.map(([v,l])=>{const on=q.multi?(sel||[]).includes(v):sel===v;return '<button class="opt" data-ans="'+v+'" aria-pressed="'+on+'">'+esc(l)+(on?'<svg class="check" viewBox="0 0 24 24" style="fill:none;stroke:var(--sun-ink)" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>':'')+'</button>'}).join("");
   return '<div class="ob">'+
-    (obStep===0?'<div class="stack"><div class="mark"><i>0→1</i>Zero to One</div><p class="muted">Before anything else, a quick check of where you are today. Nine short questions, one at a time. Your answers decide your first three missions.</p></div>'+(obRetake?'':'<details class="guide"><summary>Have a backup code?</summary><div class="gbody"><textarea id="restoreOb" placeholder="Paste your backup code" style="min-height:70px;font:500 .75rem/1.3 var(--f-mono)"></textarea><span class="muted" style="font-size:.78rem">App version 3</span><button class="btn small" data-act="restore-ob" style="align-self:flex-start">Restore my progress</button></div></details>'):'')+
+    (obStep===0?'<div class="stack"><div class="mark"><i>0→1</i>Zero to One</div><p class="muted">Before anything else, a quick check of where you are today. Nine short questions, one at a time. Your answers decide your first three missions.</p></div>'+(obRetake?'':'<details class="guide"><summary>Have a backup code?</summary><div class="gbody"><textarea id="restoreOb" placeholder="Paste your backup code" style="min-height:70px;font:500 .75rem/1.3 var(--f-mono)"></textarea><span class="muted" style="font-size:.78rem">App version 4</span><button class="btn small" data-act="restore-ob" style="align-self:flex-start">Restore my progress</button></div></details>'):'')+
     '<div class="stack"><div class="row" style="justify-content:space-between"><span class="eyebrow num">Baseline · '+(obStep+1)+' of '+QUESTIONS.length+'</span>'+(obStep>0?'<button class="link" data-act="ob-back">Back</button>':'')+'</div><div class="ob-bar"><i style="width:'+((obStep)/QUESTIONS.length*100)+'%"></i></div></div>'+
     '<div class="stack"><h1 class="ob-q">'+esc(q.q)+'</h1>'+(q.sub?'<p class="muted">'+esc(q.sub)+'</p>':'')+'</div>'+
     '<div class="opts">'+optHTML+'</div>'+
@@ -553,7 +587,7 @@ function renderToday(){
       '<div class="m-head"><h3>'+m.name+'</h3><span class="m-xp num">+'+XP.min+' / +'+XP.full+'</span></div>'+
       (st?'<div class="m-done"><svg class="check" viewBox="0 0 24 24" style="fill:none;stroke:currentColor" stroke-width="2.6"><path d="M5 12l5 5 9-10"/></svg>'+(st==="full"?"Full version done":"Minimum done. It counts.")+'</div>'+
         '<div class="m-actions">'+(st==="min"?'<button class="btn small soft" data-act="full" data-id="'+id+'">I did the full version too</button><button class="link" data-act="stuck-full" data-id="'+id+'">Walk me through the full version</button>':'')+'<button class="link" data-act="undo" data-id="'+id+'">Undo</button></div>'
-      :'<p class="m-min"><b>Minimum:</b> '+esc(m.min)+'</p>'+(id==="wash"?'<p class="m-anchor"><b>Full version today:</b> '+(hairDay(k)?'shower with shampoo and conditioner. It\'s a hair day.':'shower, no hair wash. Hair is tomorrow.')+'</p>':'')+
+      :'<p class="m-min"><b>Minimum:</b> '+esc(m.min)+'</p>'+timeLine(id,k)+(id==="wash"?'<p class="m-anchor"><b>Full version today:</b> '+(hairDay(k)?'shower with shampoo and conditioner. It\'s a hair day.':'shower, no hair wash. Hair is tomorrow.')+'</p>':'')+
         '<div class="m-actions"><button class="btn small" data-act="min" data-id="'+id+'">Did the minimum</button><button class="btn small ghost" data-act="full" data-id="'+id+'">Did the full version</button><button class="link" data-act="stuck" data-id="'+id+'">I\'m stuck</button><button class="link" data-act="stuck-full" data-id="'+id+'">I wanna do the full version</button></div>')+
     '</div></article>';
   }).join("");
@@ -571,16 +605,34 @@ function renderToday(){
 
   const journaled=S.journal.some(j=>j.date===k);
   return '<div class="stack-lg">'+
-    '<div class="stack"><span class="eyebrow">'+prettyDay(k)+'</span><h2>'+greet+'</h2></div>'+
+    '<div class="stack"><span class="eyebrow">'+prettyDay(k)+'</span><h2>'+greet+'</h2>'+totalsLine(k,d)+'</div>'+
     '<div class="dawn">'+dawnSVG(p)+'<div class="dawn-text"><div><div class="eyebrow">Today\'s floor</div><div class="big num">'+n+'<span> / '+tot+'</span></div></div><span class="chip-live num">+'+dayXP(k)+' XP today</span></div></div>'+
     banner+
-    '<section class="stack">'+missions+'</section>'+
+    '<section class="stack">'+missions+'</section>'+bizHTML(k)+
     moreHTML+setupHTML+
     '<section class="card stack"><div class="row" style="justify-content:space-between"><span class="eyebrow">Last 14 days</span><span class="num" style="font-weight:600">Showed up '+last7+' of 7</span></div><div class="dots">'+dots.join("")+'</div><p class="muted" style="font-size:.88rem">A filled dot means at least one mission. Empty dots are fine. The goal is more filled dots over time.</p></section>'+
     (!journaled?'<section class="panel row" style="justify-content:space-between"><div><b>End-of-day check-in</b><br><span class="muted" style="font-size:.9rem">One minute. +'+XP.journal+' XP.</span></div><button class="btn small soft" data-act="tab" data-tab="journal">Check in</button></section>':'')+
   '</div>';
 }
 
+function timeLine(id,k){const t=mTime(id,k);return '<p class="m-anchor num">Time: about '+t[0]+' min for the minimum, '+t[1]+' min for the full version</p>'}
+function totalsLine(k,d){const ids=d.set.concat(bizToday(k));let a=0,b=0;ids.forEach(id=>{const t=mTime(id,k);a+=t[0];b+=t[1]});return '<p class="muted num" style="font-size:.92rem">Today: about '+a+' min if you do the minimums, up to '+b+' min for everything full.</p>'}
+function bizHTML(k){
+  const unlocked=floorDone(k);const ids=bizToday(k);
+  const t=ids.reduce((a,id)=>[a[0]+BIZ[id].tmin,a[1]+BIZ[id].tfull],[0,0]);
+  const rows=ids.map(id=>{const b=BIZ[id];const st=bizDone(k,id);const open=b.always||unlocked;
+    return '<article class="mission'+(st?' is-done':'')+'"'+(open||st?'':' style="opacity:.6"')+'><div class="m-icon">'+icon("biz")+'</div><div class="m-body">'+
+      '<div class="m-head"><h3>'+esc(b.name)+'</h3><span class="m-xp num">+'+XP.bizMin+' / +'+XP.bizFull+'</span></div>'+
+      (st?'<div class="m-done"><svg class="check" viewBox="0 0 24 24" style="fill:none;stroke:currentColor" stroke-width="2.6"><path d="M5 12l5 5 9-10"/></svg>'+(st==="full"?"Full version done":"Minimum done. It counts.")+'</div><div class="m-actions">'+(st==="min"?'<button class="btn small soft" data-act="bfull" data-id="'+id+'">I did the full version too</button>':'')+'<button class="link" data-act="bundo" data-id="'+id+'">Undo</button></div>'
+      :'<p class="m-min"><b>Minimum:</b> '+esc(b.min)+'</p><p class="m-anchor"><b>Full:</b> '+esc(b.full)+'</p>'+timeLine(id,k)+
+        (open?'<div class="m-actions"><button class="btn small" data-act="bmin" data-id="'+id+'">Did the minimum</button><button class="btn small ghost" data-act="bfull" data-id="'+id+'">Did the full version</button><button class="link" data-act="stuck" data-id="'+id+'">I\'m stuck</button><button class="link" data-act="stuck-full" data-id="'+id+'">I wanna do the full version</button></div>'
+          :'<p class="m-anchor"><b>Unlocks after your missions.</b> Minimums count.</p>'))+
+    '</div></article>'}).join("");
+  return '<section class="stack"><div class="row" style="justify-content:space-between;margin-top:8px"><span class="eyebrow">Etsy shop</span><span class="muted num" style="font-size:.85rem">about '+t[0]+'–'+t[1]+' min</span></div>'+rows+
+    (ids.length===1?'<p class="muted" style="font-size:.9rem">No shop task today. Rest days are part of the plan, so you don\'t burn out.</p>':'')+'</section>';
+}
+function markBiz(id,lvl){const k=todayKey();S.biz=S.biz||{};const before=dayXP(k);S.biz[k+":"+id]=lvl;save();toast("+"+(dayXP(k)-before)+" XP");render()}
+function markAny(id,lvl){if(BIZ[id])markBiz(id,lvl);else mark(id,lvl)}
 function readyForMore(){return countIn(7,floorDone)>=5}
 
 function pitem(k,id,text,enabled){
@@ -739,9 +791,9 @@ document.addEventListener("click",e=>{
   if(ovb){const a=ovb.dataset.ov;
     if(a==="close")closeStuck();
     else if(a==="next"){ov.i++;drawStuck()}
-    else if(a==="finish"){const id=ov.id;closeStuck();mark(id,"min")}
-    else if(a==="finishfull"){const id=ov.id;closeStuck();mark(id,"full")}
-    else if(a==="gofull"){const id=ov.id;const d=S.days[todayKey()];if(!(d&&d.done&&d.done[id])){S.days[todayKey()]=d||{done:{},set:S.missions.slice()};S.days[todayKey()].done[id]="min";save();render()}if(ov.timer)clearInterval(ov.timer);ov={id,i:0,secs:0,timer:null,phase:"full"};toast("Minimum banked. Now the full version.");drawStuck()}
+    else if(a==="finish"){const id=ov.id;closeStuck();markAny(id,"min")}
+    else if(a==="finishfull"){const id=ov.id;closeStuck();markAny(id,"full")}
+    else if(a==="gofull"){const id=ov.id;const d=S.days[todayKey()];if(BIZ[id]){S.biz=S.biz||{};if(!S.biz[todayKey()+":"+id]){S.biz[todayKey()+":"+id]="min";save();render()}}else if(!(d&&d.done&&d.done[id])){S.days[todayKey()]=d||{done:{},set:S.missions.slice()};S.days[todayKey()].done[id]="min";save();render()}if(ov.timer)clearInterval(ov.timer);ov={id,i:0,secs:0,timer:null,phase:"full"};toast("Minimum banked. Now the full version.");drawStuck()}
     else if(a==="timer"){if(ov.timer){clearInterval(ov.timer);ov.timer=null}else{ov.timer=setInterval(()=>{ov.secs++;const t=document.querySelector(".timer");if(t)t.textContent=Math.floor(ov.secs/60)+":"+String(ov.secs%60).padStart(2,"0");if(ov.secs>=ovTarget()){clearInterval(ov.timer);ov.timer=null;toast(ovTarget()===120?"Two minutes. You can stop now, or keep going.":"Time's up. You can stop here.");drawStuck()}},1000)}drawStuck()}
     return}
   const tb=e.target.closest(".tab");
@@ -760,6 +812,8 @@ document.addEventListener("click",e=>{
   else if(a==="ob-finish"){const plan=buildPlan(obAnswers);const keep=S.onboarded;S.baseline=Object.assign({},obAnswers);if(!keep){S.missions=plan.missions;S.queue=plan.queue;S.createdAt=Date.now()}S.onboarded=true;obIntro=false;tab="today";save();render();window.scrollTo(0,0)}
   else if(a==="min"||a==="full")mark(id,a);
   else if(a==="undo"){const d=S.days[todayKey()];if(d){delete d.done[id];save();render()}}
+  else if(a==="bmin"||a==="bfull")markBiz(id,a==="bmin"?"min":"full");
+  else if(a==="bundo"){if(S.biz){delete S.biz[todayKey()+":"+id];save();render()}}
   else if(a==="stuck")openStuck(id);
   else if(a==="stuck-full")openStuck(id,"full");
   else if(a==="tab"){tab=b.dataset.tab;render();window.scrollTo(0,0)}
